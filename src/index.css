@@ -1,0 +1,26 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #0e1117;
+  font-family: 'IBM Plex Mono', 'Courier New', monospace;
+  color: #c8cdd6;
+  min-height: 100vh;
+}
+
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+input:focus, select:focus {
+  outline: 1px solid #e85c26;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0e1117; }
+::-webkit-scrollbar-thumb { background: #2d3340; border-radius: 3px; }
+
+table { border-collapse: collapse; width: 100%; }
