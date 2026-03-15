@@ -194,19 +194,19 @@ function StructuralTakeoff({ rows, setRows, defaultCf }) {
                 <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22"}}>
                   <td style={TD}>
                     <input value={r.shape} onChange={e=>upd(r.id,"shape",e.target.value.toUpperCase())}
-                      placeholder="W12X53" style={INP(160)}/>
+                      placeholder="W12X53" style={INP("100%")}/>
                   </td>
                   <td style={TD}>
                     <input type="number" value={r.weightPerFt} onChange={e=>upd(r.id,"weightPerFt",e.target.value)}
-                      placeholder="53" style={INP_R(70)}/>
+                      placeholder="53" style={{...INP_R("100%"), color: r.autoWt?"#6b7280":"#edf0f4"}}/>
                   </td>
                   <td style={TD}>
                     <input type="number" value={r.qty} onChange={e=>upd(r.id,"qty",e.target.value)}
-                      placeholder="1" style={INP_R(55)}/>
+                      placeholder="1" style={INP_R("100%")}/>
                   </td>
                   <td style={TD}>
                     <input type="number" value={r.length} onChange={e=>upd(r.id,"length",e.target.value)}
-                      placeholder="ft" style={INP_R(70)}/>
+                      placeholder="ft" style={INP_R("100%")}/>
                   </td>
                   <td style={{...TD_R,color:lbs>0?"#edf0f4":"#374151",fontWeight:600,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
                     {lbs>0 ? Math.round(lbs).toLocaleString() : "—"}
@@ -216,7 +216,7 @@ function StructuralTakeoff({ rows, setRows, defaultCf }) {
                   </td>
                   <td style={TD}>
                     <input type="number" value={r.costFactor} onChange={e=>upd(r.id,"costFactor",e.target.value)}
-                      placeholder="$/lb" style={INP_R(60)}/>
+                      placeholder="$/lb" style={INP_R("100%")}/>
                   </td>
                   <td style={{...TD_R,color:cost>0?"#edf0f4":"#374151",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
                     {cost>0 ? "$"+Math.round(cost).toLocaleString() : "—"}
@@ -230,12 +230,12 @@ function StructuralTakeoff({ rows, setRows, defaultCf }) {
           </tbody>
           {totLbs > 0 && (
             <tfoot>
-              <tr style={{background:"#0e1117",borderTop:"2px solid #2d3340"}}>
+              <tr style={{background:"#0f1117",borderTop:"2px solid #30363d"}}>
                 <td colSpan={4} style={{...TD,color:"#6b7280",fontSize:12}}>Totals</td>
-                <td style={{...TD,textAlign:"right",color:"#edf0f4",fontWeight:700}}>{Math.round(totLbs).toLocaleString()} lb</td>
-                <td style={{...TD,textAlign:"right",color:"#e85c26",fontWeight:700}}>{(totLbs/2000).toFixed(2)} T</td>
+                <td style={{...TD_R,color:"#edf0f4",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:15}}>{Math.round(totLbs).toLocaleString()} lb</td>
+                <td style={{...TD_R,color:"#e85c26",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:15}}>{(totLbs/2000).toFixed(2)} T</td>
                 <td></td>
-                <td style={{...TD,textAlign:"right",color:"#e85c26",fontWeight:700,fontSize:14}}>${Math.round(totCost).toLocaleString()}</td>
+                <td style={{...TD_R,color:"#e85c26",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:16}}>${Math.round(totCost).toLocaleString()}</td>
                 <td></td>
               </tr>
             </tfoot>
@@ -306,7 +306,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
                   </td>
                   <td style={TD}>
                     <input value={r.shape} onChange={e=>upd(r.id,"shape",e.target.value.toUpperCase())}
-                      placeholder={r.isPlate?"PL 1/4 × 8 × 20":"L4X4X1/2"} style={INP(140)}/>
+                      placeholder={r.isPlate?"PL 1/4 × 8 × 20":"L4X4X1/2"} style={INP("100%")}/>
                   </td>
                   <td style={TD}>
                     {r.isPlate ? (
@@ -315,7 +315,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
                       </select>
                     ) : (
                       <input type="number" value={r.weightPerFt} onChange={e=>upd(r.id,"weightPerFt",e.target.value)}
-                        placeholder="lb/ft" style={{...INP_R(70), color: r.autoWt ? "#6b7280" : "#edf0f4"}}/>
+                        placeholder="lb/ft" style={{...INP_R("100%"), color: r.autoWt?"#6b7280":"#edf0f4"}}/>
                     )}
                   </td>
                   <td style={{...TD,textAlign:"center"}}>
@@ -348,7 +348,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
                   </td>
                   <td style={TD}>
                     <input type="number" value={r.costFactor} onChange={e=>upd(r.id,"costFactor",e.target.value)}
-                      placeholder="$/lb" style={INP_R(60)}/>
+                      placeholder="$/lb" style={INP_R("100%")}/>
                   </td>
                   <td style={{...TD_R,color:cost>0?"#edf0f4":"#374151",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
                     {cost>0 ? "$"+Math.round(cost).toLocaleString() : "—"}
@@ -362,7 +362,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
           </tbody>
           {totLbs > 0 && (
             <tfoot>
-              <tr style={{background:"#0e1117",borderTop:"2px solid #2d3340"}}>
+              <tr style={{background:"#0f1117",borderTop:"2px solid #30363d"}}>
                 <td colSpan={4} style={{...TD,color:"#6b7280",fontSize:12}}>Totals</td>
                 <td style={{...TD,textAlign:"right",color:"#edf0f4",fontWeight:700}}>{Math.round(totLbs).toLocaleString()} lb</td>
                 <td style={{...TD,textAlign:"right",color:"#3b82f6",fontWeight:700}}>{(totLbs/2000).toFixed(2)} T</td>
@@ -825,8 +825,8 @@ export default function App() {
       {/* HEADER */}
       <div style={{background:"#13171f",borderBottom:"2px solid #e85c26",padding:"14px 28px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
         <div>
-          <div style={{fontSize:10,color:"#e85c26",letterSpacing:3,textTransform:"uppercase",marginBottom:4}}>SteelQuote Pro</div>
-          <div style={{fontSize:18,color:"#edf0f4",fontWeight:700}}>Fabrication Estimating System</div>
+          <div style={{fontSize:10,color:"#e85c26",letterSpacing:3,textTransform:"uppercase",marginBottom:4,fontWeight:600}}>SteelQuote Pro</div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,color:"#edf0f4",fontWeight:800,letterSpacing:1}}>Fabrication Estimating System</div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
           {isPW && <Badge color="#7c3aed" text="PREVAILING WAGE"/>}
@@ -864,7 +864,7 @@ export default function App() {
         ))}
         <div style={{marginLeft:"auto",textAlign:"right"}}>
           <div style={{fontSize:9,color:"#e85c26",letterSpacing:1.5,textTransform:"uppercase",marginBottom:2}}>Total Quote</div>
-          <div style={{fontSize:24,color:"#edf0f4",fontWeight:800}}>{fmt(est.total)}</div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,color:"#edf0f4",fontWeight:800}}>{fmt(est.total)}</div>
         </div>
       </div>
 
