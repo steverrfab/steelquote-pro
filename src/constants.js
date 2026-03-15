@@ -78,15 +78,26 @@ export const DEFAULT_GALVANIZERS = [
   {name:"Local Galv Co",      pplb:0.38, leadDays:3, notes:"Small shop. Quick small jobs."},
 ];
 
+// Plate weights in lbs/sqft by thickness
+export const PLATE_WEIGHTS = {
+  "3/16":7.65,"1/4":10.21,"5/16":12.76,"3/8":15.31,"7/16":17.86,
+  "1/2":20.41,"9/16":22.96,"5/8":25.52,"3/4":30.62,"7/8":35.73,
+  "1":40.84,"1-1/8":45.94,"1-1/4":51.05,"1-3/8":56.15,"1-1/2":61.25,
+  "1-3/4":71.46,"2":81.67,"2-1/2":102.09,
+};
+
+// New takeoff row: no mark, costFactor ($/cwt), isPlate+plateThickness+plateWidthIn for plates
 export const DEFAULT_TAKEOFF = [
-  {id:1, mark:"B1",  type:"structural", section:"W12X50",     desc:"Main Beam - East Bay",  qty:4,  wplf:50,   len:30},
-  {id:2, mark:"B2",  type:"structural", section:"W12X50",     desc:"Main Beam - West Bay",  qty:4,  wplf:50,   len:30},
-  {id:3, mark:"B3",  type:"structural", section:"W10X33",     desc:"Secondary Beam",        qty:12, wplf:33,   len:15},
-  {id:4, mark:"C1",  type:"structural", section:"HSS6X6X3/8", desc:"Column - Interior",     qty:8,  wplf:35.1, len:16},
-  {id:5, mark:"B5",  type:"structural", section:"W8X31",      desc:"Spandrel Beam",         qty:8,  wplf:31,   len:20},
-  {id:6, mark:"PL1", type:"structural", section:"PL1/2",      desc:"Base Plates 12x12",     qty:12, wplf:20.4, len:1},
-  {id:7, mark:"R1",  type:"misc",       section:"PIPE3STD",   desc:"Handrail - Pipe",       qty:6,  wplf:7.58, len:12},
-  {id:8, mark:"S1",  type:"misc",       section:"A36-PLATE",  desc:"Stair Stringer",        qty:4,  wplf:40,   len:10},
+  {id:1, type:"structural", section:"W12X50",     wplf:50,   costFactor:180, qty:8,  len:30, isPlate:false, plateThickness:"", plateWidthIn:0},
+  {id:2, type:"structural", section:"W10X33",     wplf:33,   costFactor:175, qty:12, len:15, isPlate:false, plateThickness:"", plateWidthIn:0},
+  {id:3, type:"structural", section:"HSS6X6X3/8", wplf:27.4, costFactor:195, qty:8,  len:16, isPlate:false, plateThickness:"", plateWidthIn:0},
+  {id:4, type:"structural", section:"W8X31",      wplf:31,   costFactor:178, qty:8,  len:20, isPlate:false, plateThickness:"", plateWidthIn:0},
+  {id:5, type:"structural", section:"PL1/2",      wplf:20.4, costFactor:200, qty:12, len:1,  isPlate:true,  plateThickness:"1/2", plateWidthIn:12},
+];
+
+export const DEFAULT_MISC_ITEMS = [
+  {id:1, desc:"Handrail - Pipe 3/4 SCH40", qty:1, unit:"LS", unitCost:2400},
+  {id:2, desc:"Embed Plates 6x6x3/8",      qty:16, unit:"EA", unitCost:85},
 ];
 
 export const DEFAULT_JOB_ERECTORS = [

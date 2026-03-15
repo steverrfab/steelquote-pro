@@ -3,62 +3,290 @@ import * as XLSX from 'xlsx';
 import {
   WORK_TYPES, ERECTOR_SCOPES,
   DEFAULT_ERECTOR_LIST, DEFAULT_SUPPLIERS, DEFAULT_GALVANIZERS,
-  DEFAULT_TAKEOFF, DEFAULT_JOB_ERECTORS,
+  DEFAULT_JOB_ERECTORS,
   fmt, fmtD, fmtN, today, ci, sel,
 } from './constants.js';
 import { SH, SecLbl, QSec, R, Lbl, Note, Badge, Chip, Toggle, Btn } from './components.jsx';
 
-// ── FILE UPLOAD PARSING ───────────────────────────────────────────────────────
-function parseWorkType(t) {
-  const lt = String(t||"").toLowerCase();
-  if (lt.includes("misc")||lt.includes("rail")||lt.includes("stair")||lt.includes("ladder")) return "misc";
-  if (lt.includes("stainless")||lt.includes("ss-")||lt.includes("304")||lt.includes("316")) return "stainless";
-  return "structural";
+// ── HELPERS ────────────────────────────────────────────────────────────────────
+function genId() { return Date.now() + Math.random(); }
+
+const PLATE_WT = {
+  "3/16":7.65,"1/4":10.2,"5/16":12.75,"3/8":15.3,"7/16":17.85,"1/2":20.4,
+  "9/16":22.95,"5/8":25.5,"3/4":30.6,"7/8":35.7,"1":40.8,"1 1/4":51.0,"1 1/2":61.2,"2":81.6,
+};
+const PLATE_THICKNESSES = Object.keys(PLATE_WT);
+const MISC_ITEM_TYPES = ["C / MC","L (Angle)","2L (Dbl Angle)","Plate","HSS Rect","Pipe","Stainless","Other"];
+
+function rowTotalLbs(r) {
+  if (r.isPlate) {
+    const w = parseFloat(r.widthFt)||0, l = parseFloat(r.lengthFt)||0, q = parseFloat(r.qty)||0;
+    return w * l * q * (PLATE_WT[r.thickness] || 0);
+  }
+  const len = (r.lengths||[]).reduce((a,b)=>a+b,0);
+  return (parseFloat(r.weightPerFt)||0) * len;
+}
+function rowType(r) {
+  return (r.itemType === 'Stainless') ? 'stainless' : (r._scope === 'structural' ? 'structural' : 'misc');
 }
 
-function parseUploadedFile(file, callback) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const wb = XLSX.read(e.target.result, {type:"array"});
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
-      if (raw.length < 2) { callback([], "No data found in file."); return; }
+// ── LENGTHS EDITOR ─────────────────────────────────────────────────────────────
+function LengthsEditor({ lengths, onChange, onClose }) {
+  const [inputs, setInputs] = useState(lengths.length > 0 ? lengths.map(String) : [""]);
+  const update = (i,v) => { const n=[...inputs]; n[i]=v; setInputs(n); };
+  const validNums = inputs.map(v=>parseFloat(v)).filter(v=>v>0);
+  const total = validNums.reduce((a,b)=>a+b,0);
+  const save = () => { onChange(validNums); onClose(); };
 
-      const headers = raw[0].map(h => String(h||"").toLowerCase().trim());
-      const find = (names) => headers.findIndex(h => names.some(n => h.includes(n)));
+  return (
+    <div style={{background:"#1a2030",border:"1px solid #3b82f666",borderRadius:6,padding:12,marginTop:6}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <span style={{fontSize:9,color:"#3b82f6",letterSpacing:2,textTransform:"uppercase"}}>Piece Lengths (ft)</span>
+        <span style={{fontSize:10,color:"#6b7280"}}>{validNums.length} pcs · {total.toFixed(2)} ft</span>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:4,maxHeight:120,overflowY:"auto",marginBottom:8}}>
+        {inputs.map((val,i) => (
+          <div key={i} style={{display:"flex",gap:2,alignItems:"center"}}>
+            <input type="number" min="0" step="0.083" value={val}
+              onChange={e=>update(i,e.target.value)} placeholder="ft"
+              style={{...ci(54),fontSize:11,padding:"3px 5px"}}/>
+            {inputs.length > 1 &&
+              <button onClick={()=>setInputs(inputs.filter((_,j)=>j!==i))}
+                style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:12,padding:0}}>×</button>}
+          </div>
+        ))}
+      </div>
+      <div style={{display:"flex",gap:8,borderTop:"1px solid #2d3340",paddingTop:8}}>
+        <button onClick={()=>setInputs([...inputs,""])}
+          style={{background:"none",border:"1px solid #2d3340",borderRadius:4,color:"#6b7280",padding:"3px 10px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>
+          + Add
+        </button>
+        <div style={{flex:1}}/>
+        <button onClick={onClose}
+          style={{background:"none",border:"none",color:"#6b7280",padding:"3px 8px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button>
+        <button onClick={save}
+          style={{background:"#3b82f6",border:"none",borderRadius:4,color:"white",padding:"3px 12px",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Save</button>
+      </div>
+    </div>
+  );
+}
 
-      const colMark = find(["mark","member","piece","pc"]);
-      const colSec  = find(["section","size","designation","shape","member size"]);
-      const colDesc = find(["desc","note","member type","type"]);
-      const colQty  = find(["qty","quantity","count","no.","no ","pcs","pieces","number"]);
-      const colWplf = find(["wt/ft","weight","lbs/ft","lb/ft","plf","wplf","unit wt","lbs per"]);
-      const colLen  = find(["length","len","feet"," ft","'","l (ft)"]);
-      const colType = find(["work type","category","scope","mat type"]);
+// ── STRUCTURAL TAKEOFF ─────────────────────────────────────────────────────────
+function newStructRow(cf="") {
+  return { id:genId(), shape:"", weightPerFt:"", lengths:[], costFactor:cf, _scope:"structural" };
+}
 
-      const rows = raw.slice(1)
-        .filter(r => r.some(c => c !== "" && c !== null && c !== undefined))
-        .map((r, i) => ({
-          id: Date.now() + i + Math.random(),
-          mark:    colMark >= 0 ? String(r[colMark]||"") : "",
-          section: colSec  >= 0 ? String(r[colSec]||"").toUpperCase().replace(/\s+/g,"") : "",
-          desc:    colDesc >= 0 ? String(r[colDesc]||"") : "",
-          qty:     colQty  >= 0 ? Math.max(1, parseFloat(r[colQty])||1) : 1,
-          wplf:    colWplf >= 0 ? parseFloat(r[colWplf])||0 : 0,
-          len:     colLen  >= 0 ? parseFloat(r[colLen])||0 : 0,
-          type:    colType >= 0 ? parseWorkType(r[colType]) : "structural",
-        }))
-        .filter(r => r.section || r.mark);
+function StructRow({ row, onChange, onDelete }) {
+  const [showLengths, setShowLengths] = useState(false);
+  const set = (k,v) => onChange({...row,[k]:v});
+  const totalLength = (row.lengths||[]).reduce((a,b)=>a+b,0);
+  const wplf = parseFloat(row.weightPerFt)||0;
+  const totalLbs = wplf * totalLength;
+  const cf = parseFloat(row.costFactor)||0;
+  const cost = (cf * totalLbs) / 100;
+  const hasLens = row.lengths && row.lengths.length > 0;
 
-      callback(rows, null);
-    } catch(err) {
-      callback([], "Error parsing file: " + err.message);
-    }
+  return (
+    <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:6,marginBottom:6,overflow:"hidden"}}>
+      <div style={{display:"grid",gridTemplateColumns:"2fr 0.9fr 1.1fr 0.9fr 1fr 0.9fr 1fr 24px",gap:6,padding:"8px 10px",alignItems:"center"}}>
+        <input type="text" value={row.shape} onChange={e=>set("shape",e.target.value.toUpperCase())}
+          placeholder="W12X53 / HSS6X6X1/4 / S12X50" style={{...ci("100%"),fontSize:12}}/>
+        <input type="number" value={row.weightPerFt} onChange={e=>set("weightPerFt",e.target.value)}
+          placeholder="lb/ft" style={{...ci("100%"),fontSize:12,textAlign:"right"}}/>
+        <button onClick={()=>setShowLengths(!showLengths)} style={{
+          background:hasLens?"#1e3a5f":"#1a2030",
+          border:`1px solid ${hasLens?"#3b82f6":"#2d3340"}`,
+          borderRadius:4,color:hasLens?"#60a5fa":"#6b7280",
+          padding:"4px 6px",fontSize:10,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
+          {hasLens ? `${row.lengths.length} pcs · ${totalLength.toFixed(1)}'` : "Add lengths ›"}
+        </button>
+        <span style={{fontSize:11,color:"#9ca3af",textAlign:"right"}}>{totalLength>0?totalLength.toFixed(1)+"'":"—"}</span>
+        <span style={{fontSize:11,color:"#c8cdd6",textAlign:"right",fontWeight:totalLbs>0?600:400}}>
+          {totalLbs>0?(totalLbs>=2000?(totalLbs/2000).toFixed(2)+"T":Math.round(totalLbs).toLocaleString()+" lb"):"—"}
+        </span>
+        <input type="number" value={row.costFactor} onChange={e=>set("costFactor",e.target.value)}
+          placeholder="¢/lb" style={{...ci("100%"),fontSize:12,textAlign:"right"}}/>
+        <span style={{fontSize:11,textAlign:"right",fontWeight:600,color:cost>0?"#e85c26":"#4b5563"}}>
+          {cost>0?"$"+Math.round(cost).toLocaleString():"—"}
+        </span>
+        <button onClick={onDelete} style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:14,padding:0}}>×</button>
+      </div>
+      {showLengths && (
+        <div style={{padding:"0 10px 8px"}}>
+          <LengthsEditor lengths={row.lengths||[]} onChange={lens=>set("lengths",lens)} onClose={()=>setShowLengths(false)}/>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StructuralTakeoff({ rows, setRows, defaultCf }) {
+  const addRow = () => setRows(r=>[...r, newStructRow(defaultCf)]);
+  const del = id => setRows(r=>r.filter(x=>x.id!==id));
+  const upd = row => setRows(r=>r.map(x=>x.id===row.id?row:x));
+
+  const totLbs = rows.reduce((a,r)=>a+rowTotalLbs(r),0);
+  const totCost = rows.reduce((a,r)=>{
+    const lbs=rowTotalLbs(r), cf=parseFloat(r.costFactor)||0;
+    return a+(cf*lbs/100);
+  },0);
+
+  const HDR = {fontSize:9,color:"#6b7280",letterSpacing:1.5,textTransform:"uppercase"};
+  return (
+    <div>
+      {defaultCf && (
+        <div style={{marginBottom:12,padding:"6px 12px",background:"#13171f",border:"1px solid #1e2532",borderRadius:4,fontSize:10,color:"#6b7280"}}>
+          Default ¢/lb from active supplier: <strong style={{color:"#c8cdd6"}}>{defaultCf} ¢/lb</strong> — edit per row to override
+        </div>
+      )}
+      <div style={{display:"grid",gridTemplateColumns:"2fr 0.9fr 1.1fr 0.9fr 1fr 0.9fr 1fr 24px",gap:6,padding:"0 10px 6px",borderBottom:"1px solid #1e2532",marginBottom:6}}>
+        {["Shape / Section","Wt/Ft (lb)","Lengths","Total Ft","Total Wt","¢ / lb","Material $",""].map(h=>(
+          <span key={h} style={HDR}>{h}</span>
+        ))}
+      </div>
+      {rows.map(row=>(
+        <StructRow key={row.id} row={row} onChange={upd} onDelete={()=>del(row.id)}/>
+      ))}
+      <button onClick={addRow} style={{
+        width:"100%",marginTop:4,padding:"8px",border:"2px dashed #2d3340",borderRadius:6,
+        background:"none",color:"#4b5563",cursor:"pointer",fontSize:11,fontFamily:"inherit",
+        transition:"all 0.15s"
+      }}>+ Add Section</button>
+      {totLbs > 0 && (
+        <div style={{marginTop:16,background:"#0e1117",border:"1px solid #e85c2633",borderRadius:8,padding:"12px 16px",display:"flex",gap:24,flexWrap:"wrap"}}>
+          <div><div style={{fontSize:9,color:"#6b7280",letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Total Weight</div>
+            <div style={{fontSize:16,color:"#edf0f4",fontWeight:700}}>{(totLbs/2000).toFixed(2)} tons <span style={{fontSize:11,color:"#6b7280",fontWeight:400}}>({Math.round(totLbs).toLocaleString()} lb)</span></div></div>
+          <div><div style={{fontSize:9,color:"#6b7280",letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Material Cost</div>
+            <div style={{fontSize:16,color:"#e85c26",fontWeight:700}}>${Math.round(totCost).toLocaleString()}</div></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── MISC METALS TAKEOFF ────────────────────────────────────────────────────────
+function newMiscRow(cf="") {
+  return { id:genId(), itemType:"L (Angle)", shape:"", weightPerFt:"", lengths:[], costFactor:cf,
+           isPlate:false, thickness:"1/4", widthFt:"", lengthFt:"", qty:"", _scope:"misc" };
+}
+
+function MiscRow({ row, onChange, onDelete }) {
+  const [showLengths, setShowLengths] = useState(false);
+  const set = (k,v) => {
+    let u = {...row,[k]:v};
+    if (k==="itemType") u.isPlate = (v==="Plate");
+    onChange(u);
   };
-  reader.readAsArrayBuffer(file);
+
+  const totalLbs = rowTotalLbs(row);
+  const totalLength = row.isPlate ? 0 : (row.lengths||[]).reduce((a,b)=>a+b,0);
+  const cf = parseFloat(row.costFactor)||0;
+  const cost = (cf * totalLbs) / 100;
+  const hasData = row.isPlate
+    ? (parseFloat(row.widthFt)>0 && parseFloat(row.lengthFt)>0)
+    : (row.lengths && row.lengths.length > 0);
+
+  return (
+    <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:6,marginBottom:6,overflow:"hidden"}}>
+      <div style={{display:"grid",gridTemplateColumns:"0.7fr 1.6fr 0.9fr 1.3fr 0.9fr 1fr 0.9fr 1fr 24px",gap:5,padding:"8px 10px",alignItems:"center"}}>
+        <select value={row.itemType} onChange={e=>set("itemType",e.target.value)}
+          style={{...sel,fontSize:10,padding:"4px 4px",width:"100%"}}>
+          {MISC_ITEM_TYPES.map(t=><option key={t}>{t}</option>)}
+        </select>
+        <input type="text" value={row.shape} onChange={e=>set("shape",e.target.value.toUpperCase())}
+          placeholder={row.isPlate?"PL description":"L4X4X1/2 / C8X11.5"}
+          style={{...ci("100%"),fontSize:11}}/>
+        {row.isPlate ? (
+          <select value={row.thickness} onChange={e=>set("thickness",e.target.value)}
+            style={{...sel,fontSize:10,padding:"4px 4px",width:"100%"}}>
+            {PLATE_THICKNESSES.map(t=><option key={t} value={t}>{t}"</option>)}
+          </select>
+        ) : (
+          <input type="number" value={row.weightPerFt} onChange={e=>set("weightPerFt",e.target.value)}
+            placeholder="lb/ft" style={{...ci("100%"),fontSize:11,textAlign:"right"}}/>
+        )}
+        {row.isPlate ? (
+          <div style={{display:"flex",gap:3,alignItems:"center"}}>
+            <input type="number" value={row.widthFt} onChange={e=>set("widthFt",e.target.value)}
+              placeholder="W'" style={{...ci(38),fontSize:10,padding:"4px 4px"}}/>
+            <span style={{color:"#4b5563",fontSize:10}}>×</span>
+            <input type="number" value={row.lengthFt} onChange={e=>set("lengthFt",e.target.value)}
+              placeholder="L'" style={{...ci(38),fontSize:10,padding:"4px 4px"}}/>
+            <input type="number" value={row.qty} onChange={e=>set("qty",e.target.value)}
+              placeholder="qty" style={{...ci(30),fontSize:10,padding:"4px 4px"}}/>
+          </div>
+        ) : (
+          <button onClick={()=>setShowLengths(!showLengths)} style={{
+            background:hasData?"#1e3a5f":"#1a2030",
+            border:`1px solid ${hasData?"#3b82f6":"#2d3340"}`,
+            borderRadius:4,color:hasData?"#60a5fa":"#6b7280",
+            padding:"4px 4px",fontSize:9,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
+            {hasData?`${row.lengths.length} pcs · ${totalLength.toFixed(1)}'`:"Add lengths ›"}
+          </button>
+        )}
+        <span style={{fontSize:10,color:"#9ca3af",textAlign:"right"}}>{(!row.isPlate&&totalLength>0)?totalLength.toFixed(1)+"'":"—"}</span>
+        <span style={{fontSize:10,color:"#c8cdd6",textAlign:"right",fontWeight:totalLbs>0?600:400}}>
+          {totalLbs>0?(totalLbs>=2000?(totalLbs/2000).toFixed(2)+"T":Math.round(totalLbs).toLocaleString()+" lb"):"—"}
+        </span>
+        <input type="number" value={row.costFactor} onChange={e=>set("costFactor",e.target.value)}
+          placeholder="¢/lb" style={{...ci("100%"),fontSize:11,textAlign:"right"}}/>
+        <span style={{fontSize:10,textAlign:"right",fontWeight:600,color:cost>0?"#3b82f6":"#4b5563"}}>
+          {cost>0?"$"+Math.round(cost).toLocaleString():"—"}
+        </span>
+        <button onClick={onDelete} style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:14,padding:0}}>×</button>
+      </div>
+      {showLengths && !row.isPlate && (
+        <div style={{padding:"0 10px 8px"}}>
+          <LengthsEditor lengths={row.lengths||[]} onChange={lens=>set("lengths",lens)} onClose={()=>setShowLengths(false)}/>
+        </div>
+      )}
+    </div>
+  );
 }
 
-// ── PRINT VIEW ────────────────────────────────────────────────────────────────
+function MiscTakeoff({ rows, setRows, defaultCf }) {
+  const addRow = () => setRows(r=>[...r, newMiscRow(defaultCf)]);
+  const del = id => setRows(r=>r.filter(x=>x.id!==id));
+  const upd = row => setRows(r=>r.map(x=>x.id===row.id?row:x));
+
+  const totLbs = rows.reduce((a,r)=>a+rowTotalLbs(r),0);
+  const totCost = rows.reduce((a,r)=>{const lbs=rowTotalLbs(r),cf=parseFloat(r.costFactor)||0;return a+(cf*lbs/100);},0);
+
+  const HDR = {fontSize:9,color:"#6b7280",letterSpacing:1.5,textTransform:"uppercase"};
+  return (
+    <div>
+      {defaultCf && (
+        <div style={{marginBottom:12,padding:"6px 12px",background:"#13171f",border:"1px solid #1e2532",borderRadius:4,fontSize:10,color:"#6b7280"}}>
+          Default ¢/lb from active supplier: <strong style={{color:"#c8cdd6"}}>{defaultCf} ¢/lb</strong> — edit per row to override.
+          Plate weights auto-calculated from thickness.
+        </div>
+      )}
+      <div style={{display:"grid",gridTemplateColumns:"0.7fr 1.6fr 0.9fr 1.3fr 0.9fr 1fr 0.9fr 1fr 24px",gap:5,padding:"0 10px 6px",borderBottom:"1px solid #1e2532",marginBottom:6}}>
+        {["Type","Shape / Desc","Wt/ft or Thk","Lengths / Dims","Total Ft","Total Wt","¢ / lb","Material $",""].map(h=>(
+          <span key={h} style={HDR}>{h}</span>
+        ))}
+      </div>
+      {rows.map(row=>(
+        <MiscRow key={row.id} row={row} onChange={upd} onDelete={()=>del(row.id)}/>
+      ))}
+      <button onClick={addRow} style={{
+        width:"100%",marginTop:4,padding:"8px",border:"2px dashed #2d3340",borderRadius:6,
+        background:"none",color:"#4b5563",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>
+        + Add Item
+      </button>
+      {totLbs > 0 && (
+        <div style={{marginTop:16,background:"#0e1117",border:"1px solid #3b82f633",borderRadius:8,padding:"12px 16px",display:"flex",gap:24,flexWrap:"wrap"}}>
+          <div><div style={{fontSize:9,color:"#6b7280",letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Total Weight</div>
+            <div style={{fontSize:16,color:"#edf0f4",fontWeight:700}}>{(totLbs/2000).toFixed(2)} tons <span style={{fontSize:11,color:"#6b7280",fontWeight:400}}>({Math.round(totLbs).toLocaleString()} lb)</span></div></div>
+          <div><div style={{fontSize:9,color:"#6b7280",letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Material Cost</div>
+            <div style={{fontSize:16,color:"#3b82f6",fontWeight:700}}>${Math.round(totCost).toLocaleString()}</div></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── PRINT VIEW ─────────────────────────────────────────────────────────────────
 function renderPrintView(est, jobNum, jobName, supplier, isPW, requiresAISC, taxPct, isGalv, detail, inspect, miscCost, ovhd, marg, burdenRate, companyName, quoteNotes) {
   const pv = document.getElementById("print-view");
   const badges = [isPW ? "Prevailing Wage" : null, requiresAISC ? "AISC Required" : null].filter(Boolean);
@@ -131,56 +359,7 @@ function renderPrintView(est, jobNum, jobName, supplier, isPW, requiresAISC, tax
   `;
 }
 
-// ── FILE UPLOAD ZONE ──────────────────────────────────────────────────────────
-function FileUploadZone({ onImport }) {
-  const [dragging, setDragging] = useState(false);
-  const [mode, setMode] = useState("append");
-  const fileRef = useRef();
-
-  const handle = (file) => {
-    if (!file) return;
-    parseUploadedFile(file, (rows, err) => {
-      if (err) { alert(err); return; }
-      if (rows.length === 0) { alert("No rows found. Check that your file has headers and data."); return; }
-      onImport(rows, mode);
-    });
-  };
-
-  return (
-    <div style={{marginBottom:20}}>
-      <div
-        onDragOver={e=>{e.preventDefault();setDragging(true);}}
-        onDragLeave={()=>setDragging(false)}
-        onDrop={e=>{e.preventDefault();setDragging(false);handle(e.dataTransfer.files[0]);}}
-        onClick={()=>fileRef.current.click()}
-        style={{
-          border:`2px dashed ${dragging?"#e85c26":"#2d3340"}`,borderRadius:8,
-          padding:"20px 28px",cursor:"pointer",
-          background:dragging?"#e85c2610":"#13171f",
-          transition:"all 0.2s",marginBottom:10,
-          display:"flex",alignItems:"center",gap:16,
-        }}>
-        <div style={{fontSize:22}}>📎</div>
-        <div>
-          <div style={{fontSize:12,color:"#edf0f4",fontWeight:600}}>Upload Takeoff File</div>
-          <div style={{fontSize:10,color:"#6b7280",marginTop:2}}>Drag &amp; drop or click to browse — Excel (.xlsx, .xls) or CSV</div>
-          <div style={{fontSize:10,color:"#4b5563",marginTop:2}}>Columns detected automatically: Mark, Section, Qty, Wt/Ft, Length, Description</div>
-        </div>
-        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={e=>handle(e.target.files[0])} style={{display:"none"}}/>
-      </div>
-      <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <span style={{fontSize:10,color:"#6b7280"}}>On import:</span>
-        {[["append","Add to existing"],["replace","Replace all rows"]].map(([val,label])=>(
-          <label key={val} style={{display:"flex",alignItems:"center",gap:5,fontSize:10,color:mode===val?"#e85c26":"#6b7280",cursor:"pointer"}}>
-            <input type="radio" value={val} checked={mode===val} onChange={()=>setMode(val)} style={{accentColor:"#e85c26"}}/>{label}
-          </label>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── PRICE LISTS TAB ───────────────────────────────────────────────────────────
+// ── PRICE LISTS TAB ────────────────────────────────────────────────────────────
 function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, galvanizers, setGalvanizers }) {
   const [section, setSection] = useState("suppliers");
   const [activeSup, setActiveSup] = useState(Object.keys(suppliers)[0]);
@@ -377,15 +556,18 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
   );
 }
 
-// ── MAIN APP ──────────────────────────────────────────────────────────────────
+// ── MAIN APP ───────────────────────────────────────────────────────────────────
 export default function App() {
-  const [tab, setTab]       = useState("takeoff");
-  const [jobNum, setJobNum] = useState("J-001");
-  const [jobName, setJobName] = useState("Sample Structural Package");
+  const [tab, setTab]           = useState("takeoff");
+  const [takeoffTab, setTakeoffTab] = useState("structural"); // sub-tab within takeoff
+  const [jobNum, setJobNum]     = useState("J-001");
+  const [jobName, setJobName]   = useState("Sample Structural Package");
   const [companyName, setCompanyName] = useState("R&R Fabrication, Inc.");
-  const [quoteNotes, setQuoteNotes] = useState("");
-  const [takeoff, setTakeoff] = useState(DEFAULT_TAKEOFF);
-  const [importMsg, setImportMsg] = useState(null);
+  const [quoteNotes, setQuoteNotes]   = useState("");
+
+  // NEW: two separate takeoff lists
+  const [structRows, setStructRows] = useState([newStructRow()]);
+  const [miscRows,   setMiscRows]   = useState([newMiscRow()]);
 
   const [suppliers,   setSuppliers]   = useState(DEFAULT_SUPPLIERS);
   const [erectorList, setErectorList] = useState(DEFAULT_ERECTOR_LIST);
@@ -401,7 +583,6 @@ export default function App() {
   const [monthlyOvhd, setMonthlyOvhd] = useState(70000);
   const [monthlyHrs,  setMonthlyHrs]  = useState(1400);
 
-  // PW — field/erector labor ONLY
   const [isPW,    setIsPW]    = useState(false);
   const [pwAdmin, setPwAdmin] = useState(1200);
 
@@ -424,24 +605,44 @@ export default function App() {
   const burdenRate = monthlyHrs > 0 ? monthlyOvhd / monthlyHrs : 0;
   const availableErectors = requiresAISC ? erectorList.filter(e => e.aisc) : erectorList;
 
-  const calc = (sup) => {
-    const prices = {};
-    (suppliers[sup]||[]).forEach(r => { prices[r.section] = r.ppl; });
+  // Default ¢/lb from active supplier (average of all ppl entries × 100)
+  const defaultCf = useMemo(() => {
+    const items = suppliers[supplier] || [];
+    if (!items.length) return "";
+    const avg = items.reduce((a,r)=>a+r.ppl,0) / items.length;
+    return (avg * 100).toFixed(2);
+  }, [supplier, suppliers]);
 
-    let matCost = 0;
+  const calc = () => {
+    // Compute all rows from new takeoff structure
+    const allRows = [];
     const tonsByType = {structural:0, misc:0, stainless:0};
-    const rows = takeoff.map(r => {
-      const tons = (r.wplf * r.len * r.qty) / 2000;
-      const ppl  = prices[r.section] || 0;
-      const cost = ppl * r.wplf * r.len * r.qty;
+    let matCost = 0;
+
+    structRows.forEach(r => {
+      const totalLbs = rowTotalLbs(r);
+      const tons = totalLbs / 2000;
+      const cf = parseFloat(r.costFactor) || 0;
+      const cost = (cf * totalLbs) / 100;
       matCost += cost;
-      if (tonsByType[r.type] !== undefined) tonsByType[r.type] += tons;
-      return {...r, tons, cost, ppl};
+      tonsByType.structural += tons;
+      allRows.push({...r, totalLbs, tons, cost, displayType:"structural"});
     });
-    const totalTons = Object.values(tonsByType).reduce((a,b) => a+b, 0);
+
+    miscRows.forEach(r => {
+      const totalLbs = rowTotalLbs(r);
+      const tons = totalLbs / 2000;
+      const cf = parseFloat(r.costFactor) || 0;
+      const cost = (cf * totalLbs) / 100;
+      matCost += cost;
+      const t = rowType(r);
+      if (tonsByType[t] !== undefined) tonsByType[t] += tons;
+      allRows.push({...r, totalLbs, tons, cost, displayType:t});
+    });
+
+    const totalTons = Object.values(tonsByType).reduce((a,b)=>a+b,0);
     const taxCost = matCost * (taxPct / 100);
 
-    // Shop labor — PW does NOT apply here
     let totalLabor = 0, totalBurden = 0;
     const laborByType = {};
     WORK_TYPES.forEach(({id}) => {
@@ -454,7 +655,6 @@ export default function App() {
       totalBurden += burden;
     });
 
-    // Erection — PW applies here (field labor)
     let totalErection = 0;
     const scopeMap = {Structural:"structural", "Misc Metals":"misc", Stainless:"stainless"};
     const erectDetail = jobErectors.map(je => {
@@ -485,15 +685,15 @@ export default function App() {
     const total = sub + margCost;
 
     return {
-      rows, matCost, taxCost, totalLabor, totalBurden, laborByType,
+      allRows, matCost, taxCost, totalLabor, totalBurden, laborByType,
       totalErection, erectDetail, paintMat, touchCost, galvCost, pwAdmCost,
       bolts, freightC, detail, inspect, miscCost,
       direct, ovhdCost, sub, margCost, total, totalTons, tonsByType,
     };
   };
 
-  const est = useMemo(() => calc(supplier), [
-    supplier, takeoff, suppliers, erectorList, jobErectors, isPW, pwAdmin, taxPct,
+  const est = useMemo(() => calc(), [
+    structRows, miscRows, erectorList, jobErectors, isPW, pwAdmin, taxPct,
     laborRates, shopHours, monthlyOvhd, monthlyHrs, paintType, pgal, ppg, tgal, tpg,
     isGalv, galvAmt, bolts, freightC, detail, inspect, miscCost, ovhd, marg,
   ]);
@@ -509,15 +709,15 @@ export default function App() {
   };
 
   const TABS = [
-    {id:"takeoff",   label:"Takeoff"},
-    {id:"materials", label:"Materials"},
-    {id:"labor",     label:"Labor & Burden"},
-    {id:"erection",  label:"Erection"},
-    {id:"finishes",  label:"Paint & Galv"},
-    {id:"other",     label:"Other Costs"},
-    {id:"pw",        label: isPW ? "Prev. Wage ●" : "Prev. Wage"},
-    {id:"pricelists",label:"Price Lists"},
-    {id:"quote",     label:"Quote"},
+    {id:"takeoff",    label:"Takeoff"},
+    {id:"materials",  label:"Materials"},
+    {id:"labor",      label:"Labor & Burden"},
+    {id:"erection",   label:"Erection"},
+    {id:"finishes",   label:"Paint & Galv"},
+    {id:"other",      label:"Other Costs"},
+    {id:"pw",         label: isPW ? "Prev. Wage ●" : "Prev. Wage"},
+    {id:"pricelists", label:"Price Lists"},
+    {id:"quote",      label:"Quote"},
   ];
 
   return (
@@ -569,7 +769,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* TABS */}
+      {/* MAIN TABS */}
       <div style={{display:"flex",borderBottom:"1px solid #1e2532",padding:"0 28px",background:"#0e1117",overflowX:"auto"}}>
         {TABS.map(t => (
           <button key={t.id} onClick={()=>setTab(t.id)} style={{
@@ -584,83 +784,50 @@ export default function App() {
 
       <div style={{padding:28}}>
 
-        {/* TAKEOFF */}
+        {/* TAKEOFF — two sub-tabs */}
         {tab === "takeoff" && (
           <div>
-            <SH title="Takeoff List" sub="Enter members manually, or upload an Excel/CSV file from your detailer."/>
-            <FileUploadZone onImport={(rows, mode) => {
-              if (mode === "replace") setTakeoff(rows);
-              else setTakeoff(t => [...t, ...rows]);
-              setImportMsg(`${rows.length} rows imported.`);
-              setTimeout(() => setImportMsg(null), 4000);
-            }}/>
-            {importMsg && (
-              <div style={{marginBottom:14,padding:"8px 14px",background:"#10b98122",border:"1px solid #10b981",borderRadius:6,fontSize:11,color:"#10b981"}}>{importMsg}</div>
-            )}
-            <div style={{overflowX:"auto"}}>
-              <table>
-                <thead>
-                  <tr style={{color:"#6b7280",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
-                    {["Type","Mark","Section","Description","Qty","Wt/Ft","Len","Tons",""].map(h => (
-                      <th key={h} style={{textAlign:"left",padding:"8px 10px",borderBottom:"1px solid #1e2532"}}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {takeoff.map((r,i) => {
-                    const u = (k,v) => setTakeoff(rows => rows.map(x => x.id===r.id ? {...x,[k]:v} : x));
-                    const t = (r.wplf * r.len * r.qty) / 2000;
-                    const wt = WORK_TYPES.find(w => w.id===r.type);
-                    return (
-                      <tr key={r.id} style={{background:i%2===0?"#13171f":"transparent"}}>
-                        <td style={{padding:"7px 10px"}}>
-                          <select value={r.type} onChange={e=>u("type",e.target.value)}
-                            style={{background:"#0e1117",border:`1px solid ${wt?.color||"#2d3340"}55`,borderRadius:4,color:wt?.color,padding:"3px 6px",fontSize:10,fontFamily:"inherit",width:95}}>
-                            {WORK_TYPES.map(w => <option key={w.id} value={w.id}>{w.label}</option>)}
-                          </select>
-                        </td>
-                        <td style={{padding:"7px 10px"}}><input value={r.mark} onChange={e=>u("mark",e.target.value)} style={ci(48)}/></td>
-                        <td style={{padding:"7px 10px"}}><input value={r.section} onChange={e=>u("section",e.target.value)} style={ci(110)}/></td>
-                        <td style={{padding:"7px 10px"}}><input value={r.desc} onChange={e=>u("desc",e.target.value)} style={ci(170)}/></td>
-                        <td style={{padding:"7px 10px"}}><input type="number" value={r.qty} onChange={e=>u("qty",+e.target.value)} style={ci(48)}/></td>
-                        <td style={{padding:"7px 10px"}}><input type="number" value={r.wplf} onChange={e=>u("wplf",+e.target.value)} style={ci(62)}/></td>
-                        <td style={{padding:"7px 10px"}}><input type="number" value={r.len} onChange={e=>u("len",+e.target.value)} style={ci(58)}/></td>
-                        <td style={{padding:"7px 10px",color:wt?.color,fontWeight:600,whiteSpace:"nowrap"}}>{fmtN(t,2)} T</td>
-                        <td style={{padding:"7px 10px"}}>
-                          <button onClick={()=>setTakeoff(rows=>rows.filter(x=>x.id!==r.id))} style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:16}}>×</button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <div style={{marginTop:14,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-              {WORK_TYPES.map(({id,label,color}) => (
-                <button key={id}
-                  onClick={()=>setTakeoff(r=>[...r,{id:Date.now()+Math.random(),mark:"",type:id,section:"W8X31",desc:"New Member",qty:1,wplf:31,len:20}])}
-                  style={{background:"#1a2030",border:`1px solid ${color}44`,borderRadius:6,color,padding:"7px 14px",fontSize:10,cursor:"pointer",fontFamily:"inherit",letterSpacing:1,textTransform:"uppercase"}}>
-                  + {label}
+            <SH title="Material Takeoff" sub="Structural and Misc Metals on separate sheets. Each row auto-calculates weight and material cost."/>
+
+            {/* Sub-tab selector */}
+            <div style={{display:"flex",gap:0,marginBottom:20,borderBottom:"1px solid #1e2532"}}>
+              {[
+                {id:"structural", label:"Structural Steel", color:"#e85c26"},
+                {id:"misc",       label:"Misc Metals",      color:"#3b82f6"},
+              ].map(s=>(
+                <button key={s.id} onClick={()=>setTakeoffTab(s.id)} style={{
+                  background:"none",border:"none",cursor:"pointer",padding:"8px 20px",
+                  fontSize:10,letterSpacing:2,textTransform:"uppercase",
+                  color:takeoffTab===s.id?s.color:"#6b7280",
+                  borderBottom:takeoffTab===s.id?`2px solid ${s.color}`:"2px solid transparent",
+                  fontFamily:"inherit",marginBottom:-1,
+                }}>
+                  {s.label}
+                  <span style={{marginLeft:8,fontSize:9,color:"#4b5563"}}>
+                    {s.id==="structural"
+                      ? fmtN(est.tonsByType.structural,2)+"T"
+                      : fmtN(est.tonsByType.misc+est.tonsByType.stainless,2)+"T"}
+                  </span>
                 </button>
               ))}
-              <div style={{marginLeft:"auto",display:"flex",gap:16,background:"#1a2030",border:"1px solid #2d3340",borderRadius:6,padding:"8px 16px"}}>
-                {WORK_TYPES.map(({id,label,color}) => (
-                  <span key={id} style={{fontSize:11}}><span style={{color}}>{label.split(" ")[0]}: </span><strong style={{color:"#edf0f4"}}>{fmtN(est.tonsByType[id],2)}T</strong></span>
-                ))}
-                <span style={{color:"#6b7280"}}>|</span>
-                <strong style={{color:"#e85c26"}}>{fmtN(est.totalTons,2)}T total</strong>
-              </div>
             </div>
+
+            {takeoffTab === "structural" && (
+              <StructuralTakeoff rows={structRows} setRows={setStructRows} defaultCf={defaultCf}/>
+            )}
+            {takeoffTab === "misc" && (
+              <MiscTakeoff rows={miscRows} setRows={setMiscRows} defaultCf={defaultCf}/>
+            )}
           </div>
         )}
 
         {/* MATERIALS */}
         {tab === "materials" && (
           <div>
-            <SH title="Material Costs" sub="Switch supplier to reprice all members instantly."/>
+            <SH title="Material Costs" sub="Material cost is driven by ¢/lb set on each takeoff row. Select supplier to set your default rate."/>
             <div style={{display:"flex",gap:20,marginBottom:20,alignItems:"flex-end",flexWrap:"wrap"}}>
               <div>
-                <Lbl>Active Supplier</Lbl>
+                <Lbl>Active Supplier (sets default ¢/lb on new rows)</Lbl>
                 <select value={supplier} onChange={e=>setSupplier(e.target.value)} style={{...sel,marginTop:6,display:"block"}}>
                   {Object.keys(suppliers).map(s => <option key={s}>{s}</option>)}
                 </select>
@@ -673,40 +840,74 @@ export default function App() {
                 </div>
               </div>
             </div>
-            <div style={{overflowX:"auto"}}>
-              <table>
-                <thead>
-                  <tr style={{color:"#6b7280",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
-                    {["Type","Mark","Section","Description","Qty","Len","Lbs","$/Lb","Cost"].map(h => (
-                      <th key={h} style={{textAlign:"left",padding:"8px 10px",borderBottom:"1px solid #1e2532"}}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {est.rows.map((r,i) => {
-                    const wt = WORK_TYPES.find(w => w.id===r.type);
-                    return (
-                      <tr key={r.id} style={{background:i%2===0?"#13171f":"transparent"}}>
-                        <td style={{padding:"7px 10px"}}><span style={{fontSize:9,color:wt?.color,textTransform:"uppercase",letterSpacing:1}}>{r.type}</span></td>
-                        <td style={{padding:"7px 10px",color:"#6b7280",fontSize:11}}>{r.mark}</td>
-                        <td style={{padding:"7px 10px",color:"#edf0f4",fontWeight:600}}>{r.section}</td>
-                        <td style={{padding:"7px 10px",color:"#9ca3af",fontSize:11}}>{r.desc}</td>
-                        <td style={{padding:"7px 10px"}}>{r.qty}</td>
-                        <td style={{padding:"7px 10px"}}>{r.len}'</td>
-                        <td style={{padding:"7px 10px"}}>{fmtN(r.wplf*r.len*r.qty,0)}</td>
-                        <td style={{padding:"7px 10px",color:r.ppl?"#c8cdd6":"#ef4444",fontWeight:r.ppl?400:700}}>{r.ppl?`$${r.ppl.toFixed(2)}`:"NOT FOUND"}</td>
-                        <td style={{padding:"7px 10px",color:wt?.color,fontWeight:600}}>{fmt(r.cost)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-                <tfoot>
-                  <tr style={{borderTop:"2px solid #2d3340"}}>
-                    <td colSpan={8} style={{padding:"10px",color:"#9ca3af"}}>Total Material</td>
-                    <td style={{padding:"10px",color:"#edf0f4",fontWeight:700,fontSize:14}}>{fmt(est.matCost)}</td>
-                  </tr>
-                </tfoot>
-              </table>
+
+            {/* Structural rows */}
+            {structRows.some(r=>rowTotalLbs(r)>0) && (
+              <div style={{marginBottom:20}}>
+                <div style={{fontSize:9,color:"#e85c26",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Structural Steel</div>
+                <table>
+                  <thead>
+                    <tr style={{color:"#6b7280",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
+                      {["Shape","Total Lbs","Tons","¢/lb","Cost"].map(h=>(
+                        <th key={h} style={{textAlign:"left",padding:"8px 10px",borderBottom:"1px solid #1e2532"}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {structRows.filter(r=>rowTotalLbs(r)>0).map((r,i)=>{
+                      const lbs=rowTotalLbs(r), cf=parseFloat(r.costFactor)||0, cost=(cf*lbs)/100;
+                      return (
+                        <tr key={r.id} style={{background:i%2===0?"#13171f":"transparent"}}>
+                          <td style={{padding:"7px 10px",color:"#edf0f4",fontWeight:600}}>{r.shape||"—"}</td>
+                          <td style={{padding:"7px 10px"}}>{Math.round(lbs).toLocaleString()}</td>
+                          <td style={{padding:"7px 10px"}}>{fmtN(lbs/2000,3)} T</td>
+                          <td style={{padding:"7px 10px",color:cf?"#c8cdd6":"#ef4444"}}>{cf?cf+"¢":"NOT SET"}</td>
+                          <td style={{padding:"7px 10px",color:"#e85c26",fontWeight:600}}>{fmt(cost)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Misc rows */}
+            {miscRows.some(r=>rowTotalLbs(r)>0) && (
+              <div style={{marginBottom:20}}>
+                <div style={{fontSize:9,color:"#3b82f6",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Misc Metals</div>
+                <table>
+                  <thead>
+                    <tr style={{color:"#6b7280",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
+                      {["Type","Shape/Desc","Total Lbs","Tons","¢/lb","Cost"].map(h=>(
+                        <th key={h} style={{textAlign:"left",padding:"8px 10px",borderBottom:"1px solid #1e2532"}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {miscRows.filter(r=>rowTotalLbs(r)>0).map((r,i)=>{
+                      const lbs=rowTotalLbs(r), cf=parseFloat(r.costFactor)||0, cost=(cf*lbs)/100;
+                      return (
+                        <tr key={r.id} style={{background:i%2===0?"#13171f":"transparent"}}>
+                          <td style={{padding:"7px 10px",fontSize:9,color:"#3b82f6",textTransform:"uppercase"}}>{r.itemType}</td>
+                          <td style={{padding:"7px 10px",color:"#edf0f4",fontWeight:600}}>{r.shape||"—"}</td>
+                          <td style={{padding:"7px 10px"}}>{Math.round(lbs).toLocaleString()}</td>
+                          <td style={{padding:"7px 10px"}}>{fmtN(lbs/2000,3)} T</td>
+                          <td style={{padding:"7px 10px",color:cf?"#c8cdd6":"#ef4444"}}>{cf?cf+"¢":"NOT SET"}</td>
+                          <td style={{padding:"7px 10px",color:"#3b82f6",fontWeight:600}}>{fmt(cost)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:8,padding:16,maxWidth:360}}>
+              <R label="Structural Material" value={fmt(est.allRows.filter(r=>r.displayType==="structural").reduce((a,r)=>a+r.cost,0))}/>
+              <R label="Misc Metals Material" value={fmt(est.allRows.filter(r=>r.displayType==="misc").reduce((a,r)=>a+r.cost,0))}/>
+              {est.allRows.some(r=>r.displayType==="stainless") && <R label="Stainless Material" value={fmt(est.allRows.filter(r=>r.displayType==="stainless").reduce((a,r)=>a+r.cost,0))}/>}
+              {taxPct>0 && <R label={`Sales Tax (${taxPct}%)`} value={fmt(est.taxCost)}/>}
+              <R label="Total Material" value={fmt(est.matCost + est.taxCost)} hi/>
             </div>
           </div>
         )}
