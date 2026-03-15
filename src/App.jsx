@@ -8,6 +8,100 @@ import {
 } from './constants.js';
 import { SH, SecLbl, QSec, R, Lbl, Note, Badge, Chip, Toggle, Btn } from './components.jsx';
 
+// ── FILE UPLOAD ────────────────────────────────────────────────────────────────
+function parseWorkType(t) {
+  const lt = String(t||"").toLowerCase();
+  if (lt.includes("misc")||lt.includes("rail")||lt.includes("stair")||lt.includes("ladder")) return "misc";
+  if (lt.includes("stainless")||lt.includes("ss-")||lt.includes("304")||lt.includes("316")) return "stainless";
+  return "structural";
+}
+
+function parseUploadedFile(file, callback) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(e.target.result, {type:"array"});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+      if (raw.length < 2) { callback([], [], "No data found in file."); return; }
+      const headers = raw[0].map(h => String(h||"").toLowerCase().trim());
+      const find = (names) => headers.findIndex(h => names.some(n => h.includes(n)));
+      const colSec  = find(["section","size","designation","shape","member size"]);
+      const colDesc = find(["desc","note","member type","type"]);
+      const colQty  = find(["qty","quantity","count","no.","no ","pcs","pieces","number"]);
+      const colWplf = find(["wt/ft","weight","lbs/ft","lb/ft","plf","wplf","unit wt","lbs per"]);
+      const colLen  = find(["length","len","feet"," ft","'","l (ft)"]);
+      const colType = find(["work type","category","scope","mat type"]);
+
+      const structOut = [], miscOut = [];
+      raw.slice(1)
+        .filter(r => r.some(c => c !== "" && c !== null))
+        .forEach((r, i) => {
+          const section = colSec >= 0 ? String(r[colSec]||"").toUpperCase().replace(/\s+/g,"") : "";
+          const wplf    = colWplf >= 0 ? parseFloat(r[colWplf])||0 : 0;
+          const len     = colLen  >= 0 ? parseFloat(r[colLen])||0  : 0;
+          const qty     = colQty  >= 0 ? Math.max(1, parseFloat(r[colQty])||1) : 1;
+          const type    = colType >= 0 ? parseWorkType(r[colType]) : "structural";
+          if (!section) return;
+          // Build lengths array: one entry per qty
+          const lengths = len > 0 ? Array(qty).fill(len) : [];
+          const base = { id: Date.now()+i+Math.random(), shape:section, weightPerFt:String(wplf), lengths, costFactor:"", _scope:type };
+          if (type === "structural") {
+            structOut.push(base);
+          } else {
+            miscOut.push({...base, itemType:"Other", isPlate:false, thickness:"1/4", widthFt:"", lengthFt:"", qty:""});
+          }
+        });
+      callback(structOut, miscOut, null);
+    } catch(err) {
+      callback([], [], "Error parsing file: " + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function FileUploadZone({ onImport }) {
+  const [dragging, setDragging] = useState(false);
+  const [mode, setMode] = useState("append");
+  const fileRef = useRef();
+  const handle = (file) => {
+    if (!file) return;
+    parseUploadedFile(file, (sRows, mRows, err) => {
+      if (err) { alert(err); return; }
+      if (!sRows.length && !mRows.length) { alert("No rows found. Check your file has headers and data."); return; }
+      onImport(sRows, mRows, mode);
+    });
+  };
+  return (
+    <div style={{marginBottom:20}}>
+      <div
+        onDragOver={e=>{e.preventDefault();setDragging(true);}}
+        onDragLeave={()=>setDragging(false)}
+        onDrop={e=>{e.preventDefault();setDragging(false);handle(e.dataTransfer.files[0]);}}
+        onClick={()=>fileRef.current.click()}
+        style={{border:`2px dashed ${dragging?"#e85c26":"#2d3340"}`,borderRadius:8,padding:"16px 24px",
+          cursor:"pointer",background:dragging?"#e85c2610":"#13171f",transition:"all 0.2s",
+          marginBottom:10,display:"flex",alignItems:"center",gap:16}}>
+        <div style={{fontSize:20}}>📎</div>
+        <div>
+          <div style={{fontSize:12,color:"#edf0f4",fontWeight:600}}>Upload Takeoff File</div>
+          <div style={{fontSize:10,color:"#6b7280",marginTop:2}}>Drag & drop or click — Excel (.xlsx, .xls) or CSV</div>
+          <div style={{fontSize:10,color:"#4b5563",marginTop:2}}>Structural rows → Structural tab · Misc rows → Misc Metals tab</div>
+        </div>
+        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={e=>handle(e.target.files[0])} style={{display:"none"}}/>
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontSize:10,color:"#6b7280"}}>On import:</span>
+        {[["append","Add to existing"],["replace","Replace all rows"]].map(([val,label])=>(
+          <label key={val} style={{display:"flex",alignItems:"center",gap:5,fontSize:10,color:mode===val?"#e85c26":"#6b7280",cursor:"pointer"}}>
+            <input type="radio" value={val} checked={mode===val} onChange={()=>setMode(val)} style={{accentColor:"#e85c26"}}/>{label}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 function genId() { return Date.now() + Math.random(); }
 
@@ -568,6 +662,7 @@ export default function App() {
   // NEW: two separate takeoff lists
   const [structRows, setStructRows] = useState([newStructRow()]);
   const [miscRows,   setMiscRows]   = useState([newMiscRow()]);
+  const [importMsg,  setImportMsg]  = useState(null);
 
   const [suppliers,   setSuppliers]   = useState(DEFAULT_SUPPLIERS);
   const [erectorList, setErectorList] = useState(DEFAULT_ERECTOR_LIST);
@@ -788,6 +883,17 @@ export default function App() {
         {tab === "takeoff" && (
           <div>
             <SH title="Material Takeoff" sub="Structural and Misc Metals on separate sheets. Each row auto-calculates weight and material cost."/>
+
+            <FileUploadZone onImport={(sRows, mRows, mode) => {
+              if (mode === "replace") { setStructRows(sRows.length?sRows:[newStructRow()]); setMiscRows(mRows.length?mRows:[newMiscRow()]); }
+              else { if (sRows.length) setStructRows(r=>[...r,...sRows]); if (mRows.length) setMiscRows(r=>[...r,...mRows]); }
+              const total = sRows.length + mRows.length;
+              setImportMsg(`${total} rows imported — ${sRows.length} structural, ${mRows.length} misc.`);
+              setTimeout(()=>setImportMsg(null), 5000);
+            }}/>
+            {importMsg && (
+              <div style={{marginBottom:14,padding:"8px 14px",background:"#10b98122",border:"1px solid #10b981",borderRadius:6,fontSize:11,color:"#10b981"}}>{importMsg}</div>
+            )}
 
             {/* Sub-tab selector */}
             <div style={{display:"flex",gap:0,marginBottom:20,borderBottom:"1px solid #1e2532"}}>
