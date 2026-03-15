@@ -147,32 +147,41 @@ const TXT3 = TXT3;
 const ACC  = ACC;
 const BLUE = BLUE;
 
-const TH   = {fontSize:10,fontWeight:700,color:TXT2,padding:"10px 12px",borderBottom:`2px solid ${BDR2}`,textAlign:"left",whiteSpace:"nowrap",letterSpacing:"1.5px",textTransform:"uppercase",background:BG2};
-const TH_R = {...TH,textAlign:"right"};
-const TD   = {padding:"9px 12px",borderBottom:`1px solid ${BG}`,verticalAlign:"middle"};
-const TD_R = {...TD,textAlign:"right"};
+const TH   = {fontSize:10,fontWeight:700,color:"#8b949e",padding:"10px 12px",borderBottom:"2px solid #21262d",textAlign:"left",whiteSpace:"nowrap",letterSpacing:"1.5px",textTransform:"uppercase",background:"#161b22"};
+const TH_R = {fontSize:10,fontWeight:700,color:"#8b949e",padding:"10px 12px",borderBottom:"2px solid #21262d",textAlign:"right",whiteSpace:"nowrap",letterSpacing:"1.5px",textTransform:"uppercase",background:"#161b22"};
+const TD   = {padding:"9px 12px",borderBottom:"1px solid #0d1117",verticalAlign:"middle"};
+const TD_R = {padding:"9px 12px",borderBottom:"1px solid #0d1117",verticalAlign:"middle",textAlign:"right"};
 
 const INP = (w) => ({
-  background:BG3,border:`1px solid ${BDR}`,borderRadius:6,
-  color:TXT,padding:"6px 10px",fontSize:13,fontFamily:"inherit",
+  background:"#1c2128",border:"1px solid #30363d",borderRadius:6,
+  color:"#e6edf3",padding:"6px 10px",fontSize:13,fontFamily:"inherit",
   width:w||"100%",outline:"none",transition:"border-color 0.15s",
 });
-const INP_R = (w) => ({...INP(w),textAlign:"right"});
-const SEL = (w) => ({...INP(w),cursor:"pointer"});
+const INP_R = (w) => ({
+  background:"#1c2128",border:"1px solid #30363d",borderRadius:6,
+  color:"#e6edf3",padding:"6px 10px",fontSize:13,fontFamily:"inherit",
+  width:w||"100%",outline:"none",transition:"border-color 0.15s",
+  textAlign:"right",
+});
+const SEL = (w) => ({
+  background:"#1c2128",border:"1px solid #30363d",borderRadius:6,
+  color:"#e6edf3",padding:"6px 10px",fontSize:13,fontFamily:"inherit",
+  width:w||"100%",outline:"none",cursor:"pointer",
+});
 
 // Reusable card
-const CARD = {background:BG2,border:`1px solid ${BDR2}`,borderRadius:10,padding:20};
+const CARD = {background:"#161b22",border:"1px solid #21262d",borderRadius:10,padding:20};
 
 // Section header inside content
 const SectionTitle = ({title,sub}) => (
   <div style={{marginBottom:20}}>
-    <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:700,color:TXT,letterSpacing:0.5}}>{title}</div>
-    {sub && <div style={{fontSize:12,color:TXT2,marginTop:3}}>{sub}</div>}
+    <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:700,color:"#e6edf3",letterSpacing:0.5}}>{title}</div>
+    {sub && <div style={{fontSize:12,color:"#8b949e",marginTop:3}}>{sub}</div>}
   </div>
 );
 
 // Field label
-const FL = ({children}) => <div style={{fontSize:11,fontWeight:600,color:TXT2,letterSpacing:1,textTransform:"uppercase",marginBottom:5}}>{children}</div>;
+const FL = ({children}) => <div style={{fontSize:11,fontWeight:600,color:"#8b949e",letterSpacing:1,textTransform:"uppercase",marginBottom:5}}>{children}</div>;
 
 // Pill button
 const PillBtn = ({onClick,children,active,color=ACC}) => (
