@@ -563,7 +563,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
             <div>
               <Lbl>New Supplier</Lbl>
               <div style={{display:"flex",gap:8,marginTop:6}}>
-                <input value={newSupName} onChange={e=>setNewSupName(e.target.value)} placeholder="Name" style={{...ci(150),padding:"6px 10px"}}/>
+                <input value={newSupName} onChange={e=>setNewSupName(e.target.value)} placeholder="Name" style={{...INP(150),padding:"6px 10px"}}/>
                 <Btn onClick={()=>{
                   if (!newSupName.trim()) return;
                   setSuppliers(s=>({...s,[newSupName.trim()]:[]}));
@@ -601,7 +601,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
                     <td style={{padding:"6px 10px"}}>
                       <div style={{display:"flex",alignItems:"center",gap:4}}>
                         <span style={{color:TXT2,fontSize:12}}>$</span>
-                        <input type="number" value={row.ppl} onChange={e=>setSuppliers(s=>({...s,[activeSup]:s[activeSup].map((r,j)=>j===i?{...r,ppl:+e.target.value}:r)}))} style={{...ci(80),textAlign:"right"}}/>
+                        <input type="number" value={row.ppl} onChange={e=>setSuppliers(s=>({...s,[activeSup]:s[activeSup].map((r,j)=>j===i?{...r,ppl:+e.target.value}:r)}))} style={{...INP(80),textAlign:"right"}}/>
                         <span style={{color:TXT2,fontSize:11}}>/lb</span>
                       </div>
                     </td>
@@ -638,9 +638,9 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
                 {erectorList.map((row,i) => (
                   <tr key={i} style={{background:i%2===0?BG:BG2}}>
                     <td style={{padding:"6px 10px"}}><input value={row.name} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,name:e.target.value}:x))} style={INP(170)}/></td>
-                    <td style={{padding:"6px 10px"}}><input type="number" value={row.rate} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,rate:+e.target.value}:x))} style={{...ci(75),textAlign:"right"}}/></td>
-                    <td style={{padding:"6px 10px"}}><input type="number" value={row.mob} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,mob:+e.target.value}:x))} style={{...ci(75),textAlign:"right"}}/></td>
-                    <td style={{padding:"6px 10px"}}><input type="number" value={row.pwAdd} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,pwAdd:+e.target.value}:x))} style={{...ci(75),textAlign:"right"}}/></td>
+                    <td style={{padding:"6px 10px"}}><input type="number" value={row.rate} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,rate:+e.target.value}:x))} style={{...INP(75),textAlign:"right"}}/></td>
+                    <td style={{padding:"6px 10px"}}><input type="number" value={row.mob} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,mob:+e.target.value}:x))} style={{...INP(75),textAlign:"right"}}/></td>
+                    <td style={{padding:"6px 10px"}}><input type="number" value={row.pwAdd} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,pwAdd:+e.target.value}:x))} style={{...INP(75),textAlign:"right"}}/></td>
                     <td style={{padding:"6px 10px"}}><Toggle value={row.aisc} onChange={v=>setErectorList(r=>r.map((x,j)=>j===i?{...x,aisc:v}:x))}/></td>
                     <td style={{padding:"6px 10px"}}><Toggle value={row.inHouse} onChange={v=>setErectorList(r=>r.map((x,j)=>j===i?{...x,inHouse:v}:x))}/></td>
                     <td style={{padding:"6px 10px"}}><input value={row.notes} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,notes:e.target.value}:x))} style={INP(200)}/></td>
@@ -676,7 +676,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
                     <td style={{padding:"6px 10px"}}>
                       <div style={{display:"flex",alignItems:"center",gap:4}}>
                         <span style={{color:TXT2,fontSize:12}}>$</span>
-                        <input type="number" value={row.pplb} onChange={e=>setGalvanizers(r=>r.map((x,j)=>j===i?{...x,pplb:+e.target.value}:x))} style={{...ci(70),textAlign:"right"}}/>
+                        <input type="number" value={row.pplb} onChange={e=>setGalvanizers(r=>r.map((x,j)=>j===i?{...x,pplb:+e.target.value}:x))} style={{...INP(70),textAlign:"right"}}/>
                         <span style={{fontSize:10,color:TXT2}}>/lb</span>
                       </div>
                     </td>
@@ -1075,13 +1075,13 @@ export default function App() {
                   <Lbl>Monthly Overhead ($)</Lbl>
                   <div style={{display:"flex",alignItems:"center",gap:6,marginTop:6}}>
                     <span style={{color:TXT2}}>$</span>
-                    <input type="number" value={monthlyOvhd} onChange={e=>setMonthlyOvhd(+e.target.value)} style={{...ci(110),fontSize:14,fontWeight:700}}/>
+                    <input type="number" value={monthlyOvhd} onChange={e=>setMonthlyOvhd(+e.target.value)} style={{...INP(110),fontSize:14,fontWeight:700}}/>
                   </div>
                   <div style={{fontSize:9,color:TXT3,marginTop:4}}>Rent, utilities, gas, insurance, vehicles, equipment</div>
                 </div>
                 <div>
                   <Lbl>Monthly Billable Hours</Lbl>
-                  <input type="number" value={monthlyHrs} onChange={e=>setMonthlyHrs(+e.target.value)} style={{...ci(110),fontSize:14,fontWeight:700,marginTop:6,display:"block"}}/>
+                  <input type="number" value={monthlyHrs} onChange={e=>setMonthlyHrs(+e.target.value)} style={{...INP(110),fontSize:14,fontWeight:700,marginTop:6,display:"block"}}/>
                   <div style={{fontSize:9,color:TXT3,marginTop:4}}>8 workers × 173 hrs ≈ 1,384/mo</div>
                 </div>
                 <div style={{background:BG,borderRadius:8,padding:14,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",border:"1px solid #e85c2633"}}>
@@ -1100,12 +1100,12 @@ export default function App() {
                     <div style={{marginBottom:12}}>
                       <Lbl>Labor Rate ($/hr)</Lbl>
                       <input type="number" value={laborRates[id]||0} onChange={e=>setLaborRates(r=>({...r,[id]:+e.target.value}))}
-                        style={{...ci(90),marginTop:6,display:"block",fontSize:16,fontWeight:700}}/>
+                        style={{...INP(90),marginTop:6,display:"block",fontSize:16,fontWeight:700}}/>
                     </div>
                     <div style={{marginBottom:14}}>
                       <Lbl>Shop Hours</Lbl>
                       <input type="number" value={shopHours[id]||0} onChange={e=>setShopHours(h=>({...h,[id]:+e.target.value}))}
-                        style={{...ci(90),marginTop:6,display:"block",fontSize:16,fontWeight:700}}/>
+                        style={{...INP(90),marginTop:6,display:"block",fontSize:16,fontWeight:700}}/>
                     </div>
                     <div style={{borderTop:`1px solid ${color}33`,paddingTop:12}}>
                       <R label="Direct Labor" value={fmt(lb.lab||0)}/>
@@ -1174,7 +1174,7 @@ export default function App() {
                           <span style={{fontSize:10,color:TXT2}}>{je.useManualTons?"Manual":"Auto from scope"}</span>
                         </div>
                         {je.useManualTons
-                          ? <input type="number" value={je.manualTons} onChange={e=>setJobErectors(ers=>ers.map(x=>x.id===je.id?{...x,manualTons:+e.target.value}:x))} style={{...ci(90),marginTop:8,display:"block"}}/>
+                          ? <input type="number" value={je.manualTons} onChange={e=>setJobErectors(ers=>ers.map(x=>x.id===je.id?{...x,manualTons:+e.target.value}:x))} style={{...INP(90),marginTop:8,display:"block"}}/>
                           : <div style={{fontSize:11,color:ACC,marginTop:6,fontWeight:600}}>{fmtN(je.tons,2)} T auto</div>
                         }
                       </div>
@@ -1350,7 +1350,7 @@ export default function App() {
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,marginBottom:20,maxWidth:700}}>
               <div>
                 <Lbl>Company Name (for printed quote)</Lbl>
-                <input value={companyName} onChange={e=>setCompanyName(e.target.value)} style={{...ci(300),marginTop:6,display:"block",padding:"7px 10px"}}/>
+                <input value={companyName} onChange={e=>setCompanyName(e.target.value)} style={{...INP(300),marginTop:6,display:"block",padding:"7px 10px"}}/>
               </div>
             </div>
             <div style={{background:BG2,border:"1px solid #1e2532",borderRadius:10,padding:28,maxWidth:600}}>
@@ -1403,11 +1403,11 @@ export default function App() {
               <div style={{marginTop:16,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,maxWidth:320}}>
                 <div>
                   <Lbl>Overhead %</Lbl>
-                  <input type="number" value={ovhd} onChange={e=>setOvhd(+e.target.value)} style={{...ci(80),marginTop:6,display:"block"}}/>
+                  <input type="number" value={ovhd} onChange={e=>setOvhd(+e.target.value)} style={{...INP(80),marginTop:6,display:"block"}}/>
                 </div>
                 <div>
                   <Lbl>Margin %</Lbl>
-                  <input type="number" value={marg} onChange={e=>setMarg(+e.target.value)} style={{...ci(80),marginTop:6,display:"block"}}/>
+                  <input type="number" value={marg} onChange={e=>setMarg(+e.target.value)} style={{...INP(80),marginTop:6,display:"block"}}/>
                 </div>
               </div>
               <div style={{borderTop:"1px solid #2d3340",marginTop:14,paddingTop:12}}>
@@ -1427,7 +1427,7 @@ export default function App() {
               <Lbl>Quote Notes (printed on client quote)</Lbl>
               <textarea value={quoteNotes} onChange={e=>setQuoteNotes(e.target.value)}
                 placeholder="Quote valid for 30 days. Prices subject to material market conditions at time of order. Excludes open web joists, metal deck, rebar, light gage framing, and concrete."
-                style={{...ci(600),marginTop:8,display:"block",minHeight:80,resize:"vertical",padding:"10px",lineHeight:1.6}}/>
+                style={{...INP(600),marginTop:8,display:"block",minHeight:80,resize:"vertical",padding:"10px",lineHeight:1.6}}/>
             </div>
 
             <div style={{marginTop:20,display:"flex",gap:12,alignItems:"center"}}>
