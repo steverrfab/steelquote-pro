@@ -110,272 +110,255 @@ const PLATE_WT = {
   "9/16":22.95,"5/8":25.5,"3/4":30.6,"7/8":35.7,"1":40.8,"1 1/4":51.0,"1 1/2":61.2,"2":81.6,
 };
 const PLATE_THICKNESSES = Object.keys(PLATE_WT);
-const MISC_ITEM_TYPES = ["C / MC","L (Angle)","2L (Dbl Angle)","Plate","HSS Rect","Pipe","Stainless","Other"];
+const MISC_ITEM_TYPES = ["L (Angle)","C / MC","2L (Dbl Angle)","Plate","HSS Rect","Pipe","Stainless","Other"];
 
 function rowTotalLbs(r) {
   if (r.isPlate) {
-    const w = parseFloat(r.widthFt)||0, l = parseFloat(r.lengthFt)||0, q = parseFloat(r.qty)||0;
-    return w * l * q * (PLATE_WT[r.thickness] || 0);
+    const w=parseFloat(r.widthFt)||0, l=parseFloat(r.lengthFt)||0, q=parseFloat(r.qty)||0;
+    return w * l * q * (PLATE_WT[r.thickness]||0);
   }
-  const len = (r.lengths||[]).reduce((a,b)=>a+b,0);
-  return (parseFloat(r.weightPerFt)||0) * len;
+  return (parseFloat(r.weightPerFt)||0) * (parseFloat(r.qty)||0) * (parseFloat(r.length)||0);
 }
 function rowType(r) {
-  return (r.itemType === 'Stainless') ? 'stainless' : (r._scope === 'structural' ? 'structural' : 'misc');
+  return (r.itemType==='Stainless') ? 'stainless' : (r._scope==='structural' ? 'structural' : 'misc');
 }
 
-// ── LENGTHS EDITOR ─────────────────────────────────────────────────────────────
-function LengthsEditor({ lengths, onChange, onClose }) {
-  const [inputs, setInputs] = useState(lengths.length > 0 ? lengths.map(String) : [""]);
-  const update = (i,v) => { const n=[...inputs]; n[i]=v; setInputs(n); };
-  const validNums = inputs.map(v=>parseFloat(v)).filter(v=>v>0);
-  const total = validNums.reduce((a,b)=>a+b,0);
-  const save = () => { onChange(validNums); onClose(); };
-
-  return (
-    <div style={{background:"#1a2030",border:"1px solid #3b82f666",borderRadius:6,padding:12,marginTop:6}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-        <span style={{fontSize:9,color:"#3b82f6",letterSpacing:2,textTransform:"uppercase"}}>Piece Lengths (ft)</span>
-        <span style={{fontSize:10,color:"#6b7280"}}>{validNums.length} pcs · {total.toFixed(2)} ft</span>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:4,maxHeight:120,overflowY:"auto",marginBottom:8}}>
-        {inputs.map((val,i) => (
-          <div key={i} style={{display:"flex",gap:2,alignItems:"center"}}>
-            <input type="number" min="0" step="0.083" value={val}
-              onChange={e=>update(i,e.target.value)} placeholder="ft"
-              style={{...ci(54),fontSize:11,padding:"3px 5px"}}/>
-            {inputs.length > 1 &&
-              <button onClick={()=>setInputs(inputs.filter((_,j)=>j!==i))}
-                style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:12,padding:0}}>×</button>}
-          </div>
-        ))}
-      </div>
-      <div style={{display:"flex",gap:8,borderTop:"1px solid #2d3340",paddingTop:8}}>
-        <button onClick={()=>setInputs([...inputs,""])}
-          style={{background:"none",border:"1px solid #2d3340",borderRadius:4,color:"#6b7280",padding:"3px 10px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>
-          + Add
-        </button>
-        <div style={{flex:1}}/>
-        <button onClick={onClose}
-          style={{background:"none",border:"none",color:"#6b7280",padding:"3px 8px",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button>
-        <button onClick={save}
-          style={{background:"#3b82f6",border:"none",borderRadius:4,color:"white",padding:"3px 12px",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Save</button>
-      </div>
-    </div>
-  );
-}
+// shared table styles
+const TH = {fontSize:11,fontWeight:600,color:"#6b7280",padding:"8px 8px",borderBottom:"2px solid #1e2532",textAlign:"left",whiteSpace:"nowrap"};
+const TD = {padding:"6px 8px",borderBottom:"1px solid #1a2030",verticalAlign:"middle"};
+const INP = (w) => ({background:"#0e1117",border:"1px solid #2d3340",borderRadius:4,color:"#edf0f4",
+  padding:"5px 8px",fontSize:13,fontFamily:"inherit",width:w||"100%"});
+const INP_R = (w) => ({...INP(w),textAlign:"right"});
+const SEL = (w) => ({...INP(w),cursor:"pointer"});
 
 // ── STRUCTURAL TAKEOFF ─────────────────────────────────────────────────────────
 function newStructRow(cf="") {
-  return { id:genId(), shape:"", weightPerFt:"", lengths:[], costFactor:cf, _scope:"structural" };
-}
-
-function StructRow({ row, onChange, onDelete }) {
-  const [showLengths, setShowLengths] = useState(false);
-  const set = (k,v) => onChange({...row,[k]:v});
-  const totalLength = (row.lengths||[]).reduce((a,b)=>a+b,0);
-  const wplf = parseFloat(row.weightPerFt)||0;
-  const totalLbs = wplf * totalLength;
-  const cf = parseFloat(row.costFactor)||0;
-  const cost = (cf * totalLbs) / 100;
-  const hasLens = row.lengths && row.lengths.length > 0;
-
-  return (
-    <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:6,marginBottom:6,overflow:"hidden"}}>
-      <div style={{display:"grid",gridTemplateColumns:"2fr 0.9fr 1.1fr 0.9fr 1fr 0.9fr 1fr 24px",gap:6,padding:"8px 10px",alignItems:"center"}}>
-        <input type="text" value={row.shape} onChange={e=>set("shape",e.target.value.toUpperCase())}
-          placeholder="W12X53 / HSS6X6X1/4 / S12X50" style={{...ci("100%"),fontSize:12}}/>
-        <input type="number" value={row.weightPerFt} onChange={e=>set("weightPerFt",e.target.value)}
-          placeholder="lb/ft" style={{...ci("100%"),fontSize:12,textAlign:"right"}}/>
-        <button onClick={()=>setShowLengths(!showLengths)} style={{
-          background:hasLens?"#1e3a5f":"#1a2030",
-          border:`1px solid ${hasLens?"#3b82f6":"#2d3340"}`,
-          borderRadius:4,color:hasLens?"#60a5fa":"#6b7280",
-          padding:"4px 6px",fontSize:10,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
-          {hasLens ? `${row.lengths.length} pcs · ${totalLength.toFixed(1)}'` : "Add lengths ›"}
-        </button>
-        <span style={{fontSize:11,color:"#9ca3af",textAlign:"right"}}>{totalLength>0?totalLength.toFixed(1)+"'":"—"}</span>
-        <span style={{fontSize:11,color:"#c8cdd6",textAlign:"right",fontWeight:totalLbs>0?600:400}}>
-          {totalLbs>0?(totalLbs>=2000?(totalLbs/2000).toFixed(2)+"T":Math.round(totalLbs).toLocaleString()+" lb"):"—"}
-        </span>
-        <input type="number" value={row.costFactor} onChange={e=>set("costFactor",e.target.value)}
-          placeholder="¢/lb" style={{...ci("100%"),fontSize:12,textAlign:"right"}}/>
-        <span style={{fontSize:11,textAlign:"right",fontWeight:600,color:cost>0?"#e85c26":"#4b5563"}}>
-          {cost>0?"$"+Math.round(cost).toLocaleString():"—"}
-        </span>
-        <button onClick={onDelete} style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:14,padding:0}}>×</button>
-      </div>
-      {showLengths && (
-        <div style={{padding:"0 10px 8px"}}>
-          <LengthsEditor lengths={row.lengths||[]} onChange={lens=>set("lengths",lens)} onClose={()=>setShowLengths(false)}/>
-        </div>
-      )}
-    </div>
-  );
+  return { id:genId(), shape:"", weightPerFt:"", qty:"1", length:"", costFactor:cf, _scope:"structural" };
 }
 
 function StructuralTakeoff({ rows, setRows, defaultCf }) {
-  const addRow = () => setRows(r=>[...r, newStructRow(defaultCf)]);
+  const add = () => setRows(r=>[...r, newStructRow(defaultCf)]);
   const del = id => setRows(r=>r.filter(x=>x.id!==id));
-  const upd = row => setRows(r=>r.map(x=>x.id===row.id?row:x));
+  const upd = (id,k,v) => setRows(r=>r.map(x=>x.id===id?{...x,[k]:v}:x));
 
-  const totLbs = rows.reduce((a,r)=>a+rowTotalLbs(r),0);
-  const totCost = rows.reduce((a,r)=>{
-    const lbs=rowTotalLbs(r), cf=parseFloat(r.costFactor)||0;
-    return a+(cf*lbs/100);
-  },0);
+  const totLbs  = rows.reduce((a,r)=>a+rowTotalLbs(r), 0);
+  const totCost = rows.reduce((a,r)=>{ const lbs=rowTotalLbs(r),cf=parseFloat(r.costFactor)||0; return a+(cf*lbs/100); }, 0);
 
-  const HDR = {fontSize:9,color:"#6b7280",letterSpacing:1.5,textTransform:"uppercase"};
   return (
     <div>
       {defaultCf && (
-        <div style={{marginBottom:12,padding:"6px 12px",background:"#13171f",border:"1px solid #1e2532",borderRadius:4,fontSize:10,color:"#6b7280"}}>
-          Default ¢/lb from active supplier: <strong style={{color:"#c8cdd6"}}>{defaultCf} ¢/lb</strong> — edit per row to override
+        <div style={{marginBottom:12,padding:"7px 12px",background:"#13171f",border:"1px solid #2d3340",borderRadius:4,fontSize:12,color:"#6b7280"}}>
+          Active supplier avg: <strong style={{color:"#edf0f4"}}>{defaultCf} ¢/lb</strong> — used as default for new rows. Edit per row to override.
         </div>
       )}
-      <div style={{display:"grid",gridTemplateColumns:"2fr 0.9fr 1.1fr 0.9fr 1fr 0.9fr 1fr 24px",gap:6,padding:"0 10px 6px",borderBottom:"1px solid #1e2532",marginBottom:6}}>
-        {["Shape / Section","Wt/Ft (lb)","Lengths","Total Ft","Total Wt","¢ / lb","Material $",""].map(h=>(
-          <span key={h} style={HDR}>{h}</span>
-        ))}
+      <div style={{overflowX:"auto"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+          <thead>
+            <tr style={{background:"#13171f"}}>
+              <th style={TH}>Section / Shape</th>
+              <th style={{...TH,textAlign:"right"}}>Wt / Ft (lb)</th>
+              <th style={{...TH,textAlign:"right"}}>Qty</th>
+              <th style={{...TH,textAlign:"right"}}>Length (ft)</th>
+              <th style={{...TH,textAlign:"right"}}>Total Lbs</th>
+              <th style={{...TH,textAlign:"right"}}>Tons</th>
+              <th style={{...TH,textAlign:"right"}}>¢ / lb</th>
+              <th style={{...TH,textAlign:"right"}}>Material $</th>
+              <th style={TH}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r,i) => {
+              const lbs = rowTotalLbs(r);
+              const cf  = parseFloat(r.costFactor)||0;
+              const cost = (cf * lbs) / 100;
+              return (
+                <tr key={r.id} style={{background:i%2===0?"#13171f":"transparent"}}>
+                  <td style={TD}>
+                    <input value={r.shape} onChange={e=>upd(r.id,"shape",e.target.value.toUpperCase())}
+                      placeholder="W12X53" style={INP(160)}/>
+                  </td>
+                  <td style={TD}>
+                    <input type="number" value={r.weightPerFt} onChange={e=>upd(r.id,"weightPerFt",e.target.value)}
+                      placeholder="53" style={INP_R(70)}/>
+                  </td>
+                  <td style={TD}>
+                    <input type="number" value={r.qty} onChange={e=>upd(r.id,"qty",e.target.value)}
+                      placeholder="1" style={INP_R(55)}/>
+                  </td>
+                  <td style={TD}>
+                    <input type="number" value={r.length} onChange={e=>upd(r.id,"length",e.target.value)}
+                      placeholder="ft" style={INP_R(70)}/>
+                  </td>
+                  <td style={{...TD,textAlign:"right",color:"#c8cdd6",fontWeight:lbs>0?600:400}}>
+                    {lbs>0 ? Math.round(lbs).toLocaleString() : "—"}
+                  </td>
+                  <td style={{...TD,textAlign:"right",color:"#e85c26",fontWeight:600}}>
+                    {lbs>0 ? (lbs/2000).toFixed(3) : "—"}
+                  </td>
+                  <td style={TD}>
+                    <input type="number" value={r.costFactor} onChange={e=>upd(r.id,"costFactor",e.target.value)}
+                      placeholder="¢" style={INP_R(60)}/>
+                  </td>
+                  <td style={{...TD,textAlign:"right",color:cost>0?"#edf0f4":"#4b5563",fontWeight:600}}>
+                    {cost>0 ? "$"+Math.round(cost).toLocaleString() : "—"}
+                  </td>
+                  <td style={TD}>
+                    <button onClick={()=>del(r.id)} style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:16,padding:"0 4px"}}>×</button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+          {totLbs > 0 && (
+            <tfoot>
+              <tr style={{background:"#0e1117",borderTop:"2px solid #2d3340"}}>
+                <td colSpan={4} style={{...TD,color:"#6b7280",fontSize:12}}>Totals</td>
+                <td style={{...TD,textAlign:"right",color:"#edf0f4",fontWeight:700}}>{Math.round(totLbs).toLocaleString()} lb</td>
+                <td style={{...TD,textAlign:"right",color:"#e85c26",fontWeight:700}}>{(totLbs/2000).toFixed(2)} T</td>
+                <td></td>
+                <td style={{...TD,textAlign:"right",color:"#e85c26",fontWeight:700,fontSize:14}}>${Math.round(totCost).toLocaleString()}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
       </div>
-      {rows.map(row=>(
-        <StructRow key={row.id} row={row} onChange={upd} onDelete={()=>del(row.id)}/>
-      ))}
-      <button onClick={addRow} style={{
-        width:"100%",marginTop:4,padding:"8px",border:"2px dashed #2d3340",borderRadius:6,
-        background:"none",color:"#4b5563",cursor:"pointer",fontSize:11,fontFamily:"inherit",
-        transition:"all 0.15s"
-      }}>+ Add Section</button>
-      {totLbs > 0 && (
-        <div style={{marginTop:16,background:"#0e1117",border:"1px solid #e85c2633",borderRadius:8,padding:"12px 16px",display:"flex",gap:24,flexWrap:"wrap"}}>
-          <div><div style={{fontSize:9,color:"#6b7280",letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Total Weight</div>
-            <div style={{fontSize:16,color:"#edf0f4",fontWeight:700}}>{(totLbs/2000).toFixed(2)} tons <span style={{fontSize:11,color:"#6b7280",fontWeight:400}}>({Math.round(totLbs).toLocaleString()} lb)</span></div></div>
-          <div><div style={{fontSize:9,color:"#6b7280",letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Material Cost</div>
-            <div style={{fontSize:16,color:"#e85c26",fontWeight:700}}>${Math.round(totCost).toLocaleString()}</div></div>
-        </div>
-      )}
+      <button onClick={add} style={{marginTop:10,padding:"8px 18px",border:"2px dashed #2d3340",borderRadius:6,
+        background:"none",color:"#6b7280",cursor:"pointer",fontSize:13,fontFamily:"inherit",
+        transition:"border-color 0.15s"}}>
+        + Add Row
+      </button>
     </div>
   );
 }
 
 // ── MISC METALS TAKEOFF ────────────────────────────────────────────────────────
 function newMiscRow(cf="") {
-  return { id:genId(), itemType:"L (Angle)", shape:"", weightPerFt:"", lengths:[], costFactor:cf,
-           isPlate:false, thickness:"1/4", widthFt:"", lengthFt:"", qty:"", _scope:"misc" };
-}
-
-function MiscRow({ row, onChange, onDelete }) {
-  const [showLengths, setShowLengths] = useState(false);
-  const set = (k,v) => {
-    let u = {...row,[k]:v};
-    if (k==="itemType") u.isPlate = (v==="Plate");
-    onChange(u);
-  };
-
-  const totalLbs = rowTotalLbs(row);
-  const totalLength = row.isPlate ? 0 : (row.lengths||[]).reduce((a,b)=>a+b,0);
-  const cf = parseFloat(row.costFactor)||0;
-  const cost = (cf * totalLbs) / 100;
-  const hasData = row.isPlate
-    ? (parseFloat(row.widthFt)>0 && parseFloat(row.lengthFt)>0)
-    : (row.lengths && row.lengths.length > 0);
-
-  return (
-    <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:6,marginBottom:6,overflow:"hidden"}}>
-      <div style={{display:"grid",gridTemplateColumns:"0.7fr 1.6fr 0.9fr 1.3fr 0.9fr 1fr 0.9fr 1fr 24px",gap:5,padding:"8px 10px",alignItems:"center"}}>
-        <select value={row.itemType} onChange={e=>set("itemType",e.target.value)}
-          style={{...sel,fontSize:10,padding:"4px 4px",width:"100%"}}>
-          {MISC_ITEM_TYPES.map(t=><option key={t}>{t}</option>)}
-        </select>
-        <input type="text" value={row.shape} onChange={e=>set("shape",e.target.value.toUpperCase())}
-          placeholder={row.isPlate?"PL description":"L4X4X1/2 / C8X11.5"}
-          style={{...ci("100%"),fontSize:11}}/>
-        {row.isPlate ? (
-          <select value={row.thickness} onChange={e=>set("thickness",e.target.value)}
-            style={{...sel,fontSize:10,padding:"4px 4px",width:"100%"}}>
-            {PLATE_THICKNESSES.map(t=><option key={t} value={t}>{t}"</option>)}
-          </select>
-        ) : (
-          <input type="number" value={row.weightPerFt} onChange={e=>set("weightPerFt",e.target.value)}
-            placeholder="lb/ft" style={{...ci("100%"),fontSize:11,textAlign:"right"}}/>
-        )}
-        {row.isPlate ? (
-          <div style={{display:"flex",gap:3,alignItems:"center"}}>
-            <input type="number" value={row.widthFt} onChange={e=>set("widthFt",e.target.value)}
-              placeholder="W'" style={{...ci(38),fontSize:10,padding:"4px 4px"}}/>
-            <span style={{color:"#4b5563",fontSize:10}}>×</span>
-            <input type="number" value={row.lengthFt} onChange={e=>set("lengthFt",e.target.value)}
-              placeholder="L'" style={{...ci(38),fontSize:10,padding:"4px 4px"}}/>
-            <input type="number" value={row.qty} onChange={e=>set("qty",e.target.value)}
-              placeholder="qty" style={{...ci(30),fontSize:10,padding:"4px 4px"}}/>
-          </div>
-        ) : (
-          <button onClick={()=>setShowLengths(!showLengths)} style={{
-            background:hasData?"#1e3a5f":"#1a2030",
-            border:`1px solid ${hasData?"#3b82f6":"#2d3340"}`,
-            borderRadius:4,color:hasData?"#60a5fa":"#6b7280",
-            padding:"4px 4px",fontSize:9,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
-            {hasData?`${row.lengths.length} pcs · ${totalLength.toFixed(1)}'`:"Add lengths ›"}
-          </button>
-        )}
-        <span style={{fontSize:10,color:"#9ca3af",textAlign:"right"}}>{(!row.isPlate&&totalLength>0)?totalLength.toFixed(1)+"'":"—"}</span>
-        <span style={{fontSize:10,color:"#c8cdd6",textAlign:"right",fontWeight:totalLbs>0?600:400}}>
-          {totalLbs>0?(totalLbs>=2000?(totalLbs/2000).toFixed(2)+"T":Math.round(totalLbs).toLocaleString()+" lb"):"—"}
-        </span>
-        <input type="number" value={row.costFactor} onChange={e=>set("costFactor",e.target.value)}
-          placeholder="¢/lb" style={{...ci("100%"),fontSize:11,textAlign:"right"}}/>
-        <span style={{fontSize:10,textAlign:"right",fontWeight:600,color:cost>0?"#3b82f6":"#4b5563"}}>
-          {cost>0?"$"+Math.round(cost).toLocaleString():"—"}
-        </span>
-        <button onClick={onDelete} style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:14,padding:0}}>×</button>
-      </div>
-      {showLengths && !row.isPlate && (
-        <div style={{padding:"0 10px 8px"}}>
-          <LengthsEditor lengths={row.lengths||[]} onChange={lens=>set("lengths",lens)} onClose={()=>setShowLengths(false)}/>
-        </div>
-      )}
-    </div>
-  );
+  return { id:genId(), itemType:"L (Angle)", shape:"", weightPerFt:"", qty:"1", length:"",
+           costFactor:cf, isPlate:false, thickness:"1/4", widthFt:"", lengthFt:"", _scope:"misc" };
 }
 
 function MiscTakeoff({ rows, setRows, defaultCf }) {
-  const addRow = () => setRows(r=>[...r, newMiscRow(defaultCf)]);
+  const add = () => setRows(r=>[...r, newMiscRow(defaultCf)]);
   const del = id => setRows(r=>r.filter(x=>x.id!==id));
-  const upd = row => setRows(r=>r.map(x=>x.id===row.id?row:x));
+  const upd = (id,k,v) => setRows(r=>r.map(x=>{
+    if (x.id!==id) return x;
+    const u = {...x,[k]:v};
+    if (k==="itemType") u.isPlate = (v==="Plate");
+    return u;
+  }));
 
-  const totLbs = rows.reduce((a,r)=>a+rowTotalLbs(r),0);
-  const totCost = rows.reduce((a,r)=>{const lbs=rowTotalLbs(r),cf=parseFloat(r.costFactor)||0;return a+(cf*lbs/100);},0);
+  const totLbs  = rows.reduce((a,r)=>a+rowTotalLbs(r), 0);
+  const totCost = rows.reduce((a,r)=>{ const lbs=rowTotalLbs(r),cf=parseFloat(r.costFactor)||0; return a+(cf*lbs/100); }, 0);
 
-  const HDR = {fontSize:9,color:"#6b7280",letterSpacing:1.5,textTransform:"uppercase"};
   return (
     <div>
       {defaultCf && (
-        <div style={{marginBottom:12,padding:"6px 12px",background:"#13171f",border:"1px solid #1e2532",borderRadius:4,fontSize:10,color:"#6b7280"}}>
-          Default ¢/lb from active supplier: <strong style={{color:"#c8cdd6"}}>{defaultCf} ¢/lb</strong> — edit per row to override.
-          Plate weights auto-calculated from thickness.
+        <div style={{marginBottom:12,padding:"7px 12px",background:"#13171f",border:"1px solid #2d3340",borderRadius:4,fontSize:12,color:"#6b7280"}}>
+          Active supplier avg: <strong style={{color:"#edf0f4"}}>{defaultCf} ¢/lb</strong> — Plate weights auto-calculated from thickness × sq ft.
         </div>
       )}
-      <div style={{display:"grid",gridTemplateColumns:"0.7fr 1.6fr 0.9fr 1.3fr 0.9fr 1fr 0.9fr 1fr 24px",gap:5,padding:"0 10px 6px",borderBottom:"1px solid #1e2532",marginBottom:6}}>
-        {["Type","Shape / Desc","Wt/ft or Thk","Lengths / Dims","Total Ft","Total Wt","¢ / lb","Material $",""].map(h=>(
-          <span key={h} style={HDR}>{h}</span>
-        ))}
+      <div style={{overflowX:"auto"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+          <thead>
+            <tr style={{background:"#13171f"}}>
+              <th style={TH}>Type</th>
+              <th style={TH}>Section / Description</th>
+              <th style={{...TH,textAlign:"right"}}>Wt/Ft or Thickness</th>
+              <th style={{...TH,textAlign:"center"}}>Qty / Dims</th>
+              <th style={{...TH,textAlign:"right"}}>Total Lbs</th>
+              <th style={{...TH,textAlign:"right"}}>Tons</th>
+              <th style={{...TH,textAlign:"right"}}>¢ / lb</th>
+              <th style={{...TH,textAlign:"right"}}>Material $</th>
+              <th style={TH}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r,i) => {
+              const lbs  = rowTotalLbs(r);
+              const cf   = parseFloat(r.costFactor)||0;
+              const cost = (cf * lbs) / 100;
+              return (
+                <tr key={r.id} style={{background:i%2===0?"#13171f":"transparent"}}>
+                  <td style={TD}>
+                    <select value={r.itemType} onChange={e=>upd(r.id,"itemType",e.target.value)} style={SEL(110)}>
+                      {MISC_ITEM_TYPES.map(t=><option key={t}>{t}</option>)}
+                    </select>
+                  </td>
+                  <td style={TD}>
+                    <input value={r.shape} onChange={e=>upd(r.id,"shape",e.target.value.toUpperCase())}
+                      placeholder={r.isPlate?"PL 1/4 × 8 × 20":"L4X4X1/2"} style={INP(140)}/>
+                  </td>
+                  <td style={TD}>
+                    {r.isPlate ? (
+                      <select value={r.thickness} onChange={e=>upd(r.id,"thickness",e.target.value)} style={SEL(80)}>
+                        {PLATE_THICKNESSES.map(t=><option key={t} value={t}>{t}"</option>)}
+                      </select>
+                    ) : (
+                      <input type="number" value={r.weightPerFt} onChange={e=>upd(r.id,"weightPerFt",e.target.value)}
+                        placeholder="lb/ft" style={INP_R(70)}/>
+                    )}
+                  </td>
+                  <td style={{...TD,textAlign:"center"}}>
+                    {r.isPlate ? (
+                      <div style={{display:"flex",gap:4,alignItems:"center",justifyContent:"center"}}>
+                        <input type="number" value={r.widthFt} onChange={e=>upd(r.id,"widthFt",e.target.value)}
+                          placeholder="W'" style={{...INP_R(46),fontSize:12}}/>
+                        <span style={{color:"#4b5563"}}>×</span>
+                        <input type="number" value={r.lengthFt} onChange={e=>upd(r.id,"lengthFt",e.target.value)}
+                          placeholder="L'" style={{...INP_R(46),fontSize:12}}/>
+                        <span style={{color:"#4b5563"}}>×</span>
+                        <input type="number" value={r.qty} onChange={e=>upd(r.id,"qty",e.target.value)}
+                          placeholder="qty" style={{...INP_R(40),fontSize:12}}/>
+                      </div>
+                    ) : (
+                      <div style={{display:"flex",gap:4,alignItems:"center",justifyContent:"center"}}>
+                        <input type="number" value={r.qty} onChange={e=>upd(r.id,"qty",e.target.value)}
+                          placeholder="qty" style={{...INP_R(46),fontSize:12}}/>
+                        <span style={{color:"#4b5563"}}>×</span>
+                        <input type="number" value={r.length} onChange={e=>upd(r.id,"length",e.target.value)}
+                          placeholder="ft" style={{...INP_R(55),fontSize:12}}/>
+                      </div>
+                    )}
+                  </td>
+                  <td style={{...TD,textAlign:"right",color:"#c8cdd6",fontWeight:lbs>0?600:400}}>
+                    {lbs>0 ? Math.round(lbs).toLocaleString() : "—"}
+                  </td>
+                  <td style={{...TD,textAlign:"right",color:"#3b82f6",fontWeight:600}}>
+                    {lbs>0 ? (lbs/2000).toFixed(3) : "—"}
+                  </td>
+                  <td style={TD}>
+                    <input type="number" value={r.costFactor} onChange={e=>upd(r.id,"costFactor",e.target.value)}
+                      placeholder="¢" style={INP_R(60)}/>
+                  </td>
+                  <td style={{...TD,textAlign:"right",color:cost>0?"#edf0f4":"#4b5563",fontWeight:600}}>
+                    {cost>0 ? "$"+Math.round(cost).toLocaleString() : "—"}
+                  </td>
+                  <td style={TD}>
+                    <button onClick={()=>del(r.id)} style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:16,padding:"0 4px"}}>×</button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+          {totLbs > 0 && (
+            <tfoot>
+              <tr style={{background:"#0e1117",borderTop:"2px solid #2d3340"}}>
+                <td colSpan={4} style={{...TD,color:"#6b7280",fontSize:12}}>Totals</td>
+                <td style={{...TD,textAlign:"right",color:"#edf0f4",fontWeight:700}}>{Math.round(totLbs).toLocaleString()} lb</td>
+                <td style={{...TD,textAlign:"right",color:"#3b82f6",fontWeight:700}}>{(totLbs/2000).toFixed(2)} T</td>
+                <td></td>
+                <td style={{...TD,textAlign:"right",color:"#3b82f6",fontWeight:700,fontSize:14}}>${Math.round(totCost).toLocaleString()}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
       </div>
-      {rows.map(row=>(
-        <MiscRow key={row.id} row={row} onChange={upd} onDelete={()=>del(row.id)}/>
-      ))}
-      <button onClick={addRow} style={{
-        width:"100%",marginTop:4,padding:"8px",border:"2px dashed #2d3340",borderRadius:6,
-        background:"none",color:"#4b5563",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>
-        + Add Item
+      <button onClick={add} style={{marginTop:10,padding:"8px 18px",border:"2px dashed #2d3340",borderRadius:6,
+        background:"none",color:"#6b7280",cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>
+        + Add Row
       </button>
-      {totLbs > 0 && (
-        <div style={{marginTop:16,background:"#0e1117",border:"1px solid #3b82f633",borderRadius:8,padding:"12px 16px",display:"flex",gap:24,flexWrap:"wrap"}}>
-          <div><div style={{fontSize:9,color:"#6b7280",letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Total Weight</div>
-            <div style={{fontSize:16,color:"#edf0f4",fontWeight:700}}>{(totLbs/2000).toFixed(2)} tons <span style={{fontSize:11,color:"#6b7280",fontWeight:400}}>({Math.round(totLbs).toLocaleString()} lb)</span></div></div>
-          <div><div style={{fontSize:9,color:"#6b7280",letterSpacing:1.5,textTransform:"uppercase",marginBottom:3}}>Material Cost</div>
-            <div style={{fontSize:16,color:"#3b82f6",fontWeight:700}}>${Math.round(totCost).toLocaleString()}</div></div>
-        </div>
-      )}
     </div>
   );
 }
@@ -714,17 +697,7 @@ export default function App() {
     const tonsByType = {structural:0, misc:0, stainless:0};
     let matCost = 0;
 
-    structRows.forEach(r => {
-      const totalLbs = rowTotalLbs(r);
-      const tons = totalLbs / 2000;
-      const cf = parseFloat(r.costFactor) || 0;
-      const cost = (cf * totalLbs) / 100;
-      matCost += cost;
-      tonsByType.structural += tons;
-      allRows.push({...r, totalLbs, tons, cost, displayType:"structural"});
-    });
-
-    miscRows.forEach(r => {
+    [...structRows, ...miscRows].forEach(r => {
       const totalLbs = rowTotalLbs(r);
       const tons = totalLbs / 2000;
       const cf = parseFloat(r.costFactor) || 0;
@@ -816,7 +789,7 @@ export default function App() {
   ];
 
   return (
-    <div style={{fontFamily:"'IBM Plex Mono',monospace",background:"#0e1117",minHeight:"100vh",color:"#c8cdd6"}}>
+    <div style={{fontFamily:"'Barlow',sans-serif",background:"#0e1117",minHeight:"100vh",color:"#c8cdd6"}}>
 
       {/* HEADER */}
       <div style={{background:"#13171f",borderBottom:"2px solid #e85c26",padding:"14px 28px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
