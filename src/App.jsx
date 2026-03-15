@@ -142,15 +142,10 @@ function StructuralTakeoff({ rows, setRows, defaultCf }) {
   const upd = (id,k,v) => setRows(r=>r.map(x=>x.id===id?{...x,[k]:v}:x));
 
   const totLbs  = rows.reduce((a,r)=>a+rowTotalLbs(r), 0);
-  const totCost = rows.reduce((a,r)=>{ const lbs=rowTotalLbs(r),cf=parseFloat(r.costFactor)||0; return a+(cf*lbs/100); }, 0);
+  const totCost = rows.reduce((a,r)=>{ const lbs=rowTotalLbs(r),cf=parseFloat(r.costFactor)||0; return a+(cf*lbs); }, 0);
 
   return (
     <div>
-      {defaultCf && (
-        <div style={{marginBottom:12,padding:"7px 12px",background:"#13171f",border:"1px solid #2d3340",borderRadius:4,fontSize:12,color:"#6b7280"}}>
-          Active supplier avg: <strong style={{color:"#edf0f4"}}>{defaultCf} ¢/lb</strong> — used as default for new rows. Edit per row to override.
-        </div>
-      )}
       <div style={{overflowX:"auto"}}>
         <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
           <thead>
@@ -161,7 +156,7 @@ function StructuralTakeoff({ rows, setRows, defaultCf }) {
               <th style={{...TH,textAlign:"right"}}>Length (ft)</th>
               <th style={{...TH,textAlign:"right"}}>Total Lbs</th>
               <th style={{...TH,textAlign:"right"}}>Tons</th>
-              <th style={{...TH,textAlign:"right"}}>¢ / lb</th>
+              <th style={{...TH,textAlign:"right"}}>$ / lb</th>
               <th style={{...TH,textAlign:"right"}}>Material $</th>
               <th style={TH}></th>
             </tr>
@@ -170,7 +165,7 @@ function StructuralTakeoff({ rows, setRows, defaultCf }) {
             {rows.map((r,i) => {
               const lbs = rowTotalLbs(r);
               const cf  = parseFloat(r.costFactor)||0;
-              const cost = (cf * lbs) / 100;
+              const cost = cf * lbs;
               return (
                 <tr key={r.id} style={{background:i%2===0?"#13171f":"transparent"}}>
                   <td style={TD}>
@@ -197,7 +192,7 @@ function StructuralTakeoff({ rows, setRows, defaultCf }) {
                   </td>
                   <td style={TD}>
                     <input type="number" value={r.costFactor} onChange={e=>upd(r.id,"costFactor",e.target.value)}
-                      placeholder="¢" style={INP_R(60)}/>
+                      placeholder="$/lb" style={INP_R(60)}/>
                   </td>
                   <td style={{...TD,textAlign:"right",color:cost>0?"#edf0f4":"#4b5563",fontWeight:600}}>
                     {cost>0 ? "$"+Math.round(cost).toLocaleString() : "—"}
@@ -249,15 +244,10 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
   }));
 
   const totLbs  = rows.reduce((a,r)=>a+rowTotalLbs(r), 0);
-  const totCost = rows.reduce((a,r)=>{ const lbs=rowTotalLbs(r),cf=parseFloat(r.costFactor)||0; return a+(cf*lbs/100); }, 0);
+  const totCost = rows.reduce((a,r)=>{ const lbs=rowTotalLbs(r),cf=parseFloat(r.costFactor)||0; return a+(cf*lbs); }, 0);
 
   return (
     <div>
-      {defaultCf && (
-        <div style={{marginBottom:12,padding:"7px 12px",background:"#13171f",border:"1px solid #2d3340",borderRadius:4,fontSize:12,color:"#6b7280"}}>
-          Active supplier avg: <strong style={{color:"#edf0f4"}}>{defaultCf} ¢/lb</strong> — Plate weights auto-calculated from thickness × sq ft.
-        </div>
-      )}
       <div style={{overflowX:"auto"}}>
         <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
           <thead>
@@ -268,7 +258,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
               <th style={{...TH,textAlign:"center"}}>Qty / Dims</th>
               <th style={{...TH,textAlign:"right"}}>Total Lbs</th>
               <th style={{...TH,textAlign:"right"}}>Tons</th>
-              <th style={{...TH,textAlign:"right"}}>¢ / lb</th>
+              <th style={{...TH,textAlign:"right"}}>$ / lb</th>
               <th style={{...TH,textAlign:"right"}}>Material $</th>
               <th style={TH}></th>
             </tr>
@@ -277,7 +267,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
             {rows.map((r,i) => {
               const lbs  = rowTotalLbs(r);
               const cf   = parseFloat(r.costFactor)||0;
-              const cost = (cf * lbs) / 100;
+              const cost = cf * lbs;
               return (
                 <tr key={r.id} style={{background:i%2===0?"#13171f":"transparent"}}>
                   <td style={TD}>
@@ -329,7 +319,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
                   </td>
                   <td style={TD}>
                     <input type="number" value={r.costFactor} onChange={e=>upd(r.id,"costFactor",e.target.value)}
-                      placeholder="¢" style={INP_R(60)}/>
+                      placeholder="$/lb" style={INP_R(60)}/>
                   </td>
                   <td style={{...TD,textAlign:"right",color:cost>0?"#edf0f4":"#4b5563",fontWeight:600}}>
                     {cost>0 ? "$"+Math.round(cost).toLocaleString() : "—"}
@@ -643,8 +633,20 @@ export default function App() {
   const [quoteNotes, setQuoteNotes]   = useState("");
 
   // NEW: two separate takeoff lists
-  const [structRows, setStructRows] = useState([newStructRow()]);
-  const [miscRows,   setMiscRows]   = useState([newMiscRow()]);
+  const [structRows, setStructRows] = useState([
+    {id:1, shape:"W12X53",     weightPerFt:"53",    qty:"8",  length:"22.5", costFactor:"1.82", _scope:"structural"},
+    {id:2, shape:"W12X53",     weightPerFt:"53",    qty:"4",  length:"18.0", costFactor:"1.82", _scope:"structural"},
+    {id:3, shape:"W10X33",     weightPerFt:"33",    qty:"12", length:"14.0", costFactor:"1.86", _scope:"structural"},
+    {id:4, shape:"W14X82",     weightPerFt:"82",    qty:"6",  length:"20.0", costFactor:"3.45", _scope:"structural"},
+    {id:5, shape:"W8X31",      weightPerFt:"31",    qty:"10", length:"12.5", costFactor:"1.82", _scope:"structural"},
+    {id:6, shape:"HSS6X6X3/8", weightPerFt:"19.02", qty:"4",  length:"16.0", costFactor:"1.98", _scope:"structural"},
+  ]);
+  const [miscRows, setMiscRows] = useState([
+    {id:10, itemType:"L (Angle)", shape:"L4X4X3/8",         weightPerFt:"9.8",  qty:"20", length:"6.0",  costFactor:"1.06", isPlate:false, thickness:"1/4", widthFt:"",  lengthFt:"",  _scope:"misc"},
+    {id:11, itemType:"C / MC",    shape:"C8X11.5",           weightPerFt:"11.5", qty:"8",  length:"10.0", costFactor:"0.98", isPlate:false, thickness:"1/4", widthFt:"",  lengthFt:"",  _scope:"misc"},
+    {id:12, itemType:"Plate",     shape:"PL 1/2 Baseplate",  weightPerFt:"",    qty:"6",  length:"",     costFactor:"2.15", isPlate:true,  thickness:"1/2", widthFt:"2", lengthFt:"2", _scope:"misc"},
+    {id:13, itemType:"Plate",     shape:"PL 3/8 Connection", weightPerFt:"",    qty:"24", length:"",     costFactor:"2.15", isPlate:true,  thickness:"3/8", widthFt:"1", lengthFt:"1", _scope:"misc"},
+  ]);
   const [importMsg,  setImportMsg]  = useState(null);
 
   const [suppliers,   setSuppliers]   = useState(DEFAULT_SUPPLIERS);
@@ -683,7 +685,7 @@ export default function App() {
   const burdenRate = monthlyHrs > 0 ? monthlyOvhd / monthlyHrs : 0;
   const availableErectors = requiresAISC ? erectorList.filter(e => e.aisc) : erectorList;
 
-  // Default ¢/lb from active supplier (average of all ppl entries × 100)
+  // Default $/lb from active supplier (average of all ppl entries × 100)
   const defaultCf = useMemo(() => {
     const items = suppliers[supplier] || [];
     if (!items.length) return "";
@@ -701,7 +703,7 @@ export default function App() {
       const totalLbs = rowTotalLbs(r);
       const tons = totalLbs / 2000;
       const cf = parseFloat(r.costFactor) || 0;
-      const cost = (cf * totalLbs) / 100;
+      const cost = cf * totalLbs;
       matCost += cost;
       const t = rowType(r);
       if (tonsByType[t] !== undefined) tonsByType[t] += tons;
@@ -903,10 +905,10 @@ export default function App() {
         {/* MATERIALS */}
         {tab === "materials" && (
           <div>
-            <SH title="Material Costs" sub="Material cost is driven by ¢/lb set on each takeoff row. Select supplier to set your default rate."/>
+            <SH title="Material Costs" sub="Material cost is driven by $/lb set on each takeoff row. Select supplier to set your default rate."/>
             <div style={{display:"flex",gap:20,marginBottom:20,alignItems:"flex-end",flexWrap:"wrap"}}>
               <div>
-                <Lbl>Active Supplier (sets default ¢/lb on new rows)</Lbl>
+                <Lbl>Active Supplier (sets default $/lb on new rows)</Lbl>
                 <select value={supplier} onChange={e=>setSupplier(e.target.value)} style={{...sel,marginTop:6,display:"block"}}>
                   {Object.keys(suppliers).map(s => <option key={s}>{s}</option>)}
                 </select>
@@ -927,7 +929,7 @@ export default function App() {
                 <table>
                   <thead>
                     <tr style={{color:"#6b7280",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
-                      {["Shape","Total Lbs","Tons","¢/lb","Cost"].map(h=>(
+                      {["Shape","Total Lbs","Tons","$/lb","Cost"].map(h=>(
                         <th key={h} style={{textAlign:"left",padding:"8px 10px",borderBottom:"1px solid #1e2532"}}>{h}</th>
                       ))}
                     </tr>
@@ -940,7 +942,7 @@ export default function App() {
                           <td style={{padding:"7px 10px",color:"#edf0f4",fontWeight:600}}>{r.shape||"—"}</td>
                           <td style={{padding:"7px 10px"}}>{Math.round(lbs).toLocaleString()}</td>
                           <td style={{padding:"7px 10px"}}>{fmtN(lbs/2000,3)} T</td>
-                          <td style={{padding:"7px 10px",color:cf?"#c8cdd6":"#ef4444"}}>{cf?cf+"¢":"NOT SET"}</td>
+                          <td style={{padding:"7px 10px",color:cf?"#c8cdd6":"#ef4444"}}>{cf?"$"+cf:"NOT SET"}</td>
                           <td style={{padding:"7px 10px",color:"#e85c26",fontWeight:600}}>{fmt(cost)}</td>
                         </tr>
                       );
@@ -957,7 +959,7 @@ export default function App() {
                 <table>
                   <thead>
                     <tr style={{color:"#6b7280",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
-                      {["Type","Shape/Desc","Total Lbs","Tons","¢/lb","Cost"].map(h=>(
+                      {["Type","Shape/Desc","Total Lbs","Tons","$/lb","Cost"].map(h=>(
                         <th key={h} style={{textAlign:"left",padding:"8px 10px",borderBottom:"1px solid #1e2532"}}>{h}</th>
                       ))}
                     </tr>
@@ -971,7 +973,7 @@ export default function App() {
                           <td style={{padding:"7px 10px",color:"#edf0f4",fontWeight:600}}>{r.shape||"—"}</td>
                           <td style={{padding:"7px 10px"}}>{Math.round(lbs).toLocaleString()}</td>
                           <td style={{padding:"7px 10px"}}>{fmtN(lbs/2000,3)} T</td>
-                          <td style={{padding:"7px 10px",color:cf?"#c8cdd6":"#ef4444"}}>{cf?cf+"¢":"NOT SET"}</td>
+                          <td style={{padding:"7px 10px",color:cf?"#c8cdd6":"#ef4444"}}>{cf?"$"+cf:"NOT SET"}</td>
                           <td style={{padding:"7px 10px",color:"#3b82f6",fontWeight:600}}>{fmt(cost)}</td>
                         </tr>
                       );
