@@ -137,11 +137,11 @@ function rowType(r) {
 }
 
 // shared table styles
-const TH = {fontSize:10,fontWeight:700,color:"#6b7280",padding:"10px 12px",borderBottom:"2px solid #21262d",textAlign:"left",whiteSpace:"nowrap",letterSpacing:"1.5px",textTransform:"uppercase",background:"#161b22"};
-const TH_R = {fontSize:10,fontWeight:700,color:"#6b7280",padding:"10px 12px",borderBottom:"2px solid #21262d",textAlign:"right",whiteSpace:"nowrap",letterSpacing:"1.5px",textTransform:"uppercase",background:"#161b22"};
-const TD = {padding:"8px 12px",borderBottom:"1px solid #161b22",verticalAlign:"middle"};
-const TD_R = {padding:"8px 12px",borderBottom:"1px solid #161b22",verticalAlign:"middle",textAlign:"right"};
-const INP = (w) => ({background:"#0d1117",border:"1px solid #30363d",borderRadius:6,color:"#edf0f4",
+const TH = {fontSize:10,fontWeight:700,color:"#6b7280",padding:"9px 10px",borderBottom:"2px solid #21262d",textAlign:"left",whiteSpace:"nowrap",letterSpacing:"1.5px",textTransform:"uppercase",background:"#161b22"};
+const TH_R = {fontSize:10,fontWeight:700,color:"#6b7280",padding:"9px 10px",borderBottom:"2px solid #21262d",textAlign:"right",whiteSpace:"nowrap",letterSpacing:"1.5px",textTransform:"uppercase",background:"#161b22"};
+const TD = {padding:"7px 10px",borderBottom:"1px solid #0d1117",verticalAlign:"middle"};
+const TD_R = {padding:"7px 10px",borderBottom:"1px solid #0d1117",verticalAlign:"middle",textAlign:"right"};
+const INP = (w) => ({background:"#0d1117",border:"1px solid #21262d",borderRadius:5,color:"#edf0f4",
   padding:"5px 8px",fontSize:13,fontFamily:"inherit",width:w||"100%"});
 const INP_R = (w) => ({...INP(w),textAlign:"right"});
 const SEL = (w) => ({...INP(w),cursor:"pointer"});
@@ -869,14 +869,14 @@ export default function App() {
       </div>
 
       {/* MAIN TABS */}
-      <div style={{display:"flex",borderBottom:"1px solid #1e2532",padding:"0 28px",background:"#0e1117",overflowX:"auto"}}>
+      <div style={{display:"flex",borderBottom:"2px solid #21262d",padding:"0 20px",background:"#161b22",overflowX:"auto"}}>
         {TABS.map(t => (
           <button key={t.id} onClick={()=>setTab(t.id)} style={{
-            background:"none",border:"none",cursor:"pointer",padding:"10px 14px",
-            fontSize:10,letterSpacing:2,textTransform:"uppercase",whiteSpace:"nowrap",
+            background:"none",border:"none",cursor:"pointer",padding:"11px 16px",
+            fontSize:11,letterSpacing:1.5,textTransform:"uppercase",whiteSpace:"nowrap",fontWeight:700,
             color:tab===t.id?"#e85c26":"#6b7280",
             borderBottom:tab===t.id?"2px solid #e85c26":"2px solid transparent",
-            fontFamily:"inherit",marginBottom:-1,
+            fontFamily:"inherit",marginBottom:-2,transition:"color 0.15s",
           }}>{t.label}</button>
         ))}
       </div>
@@ -900,24 +900,21 @@ export default function App() {
             )}
 
             {/* Sub-tab selector */}
-            <div style={{display:"flex",gap:0,marginBottom:20,borderBottom:"1px solid #1e2532"}}>
+            <div style={{display:"flex",gap:8,marginBottom:20}}>
               {[
-                {id:"structural", label:"Structural Steel", color:"#e85c26"},
-                {id:"misc",       label:"Misc Metals",      color:"#3b82f6"},
+                {id:"structural", label:"Structural Steel", color:"#e85c26", tons: fmtN(est.tonsByType.structural,2)+"T"},
+                {id:"misc",       label:"Misc Metals",      color:"#3b82f6", tons: fmtN(est.tonsByType.misc+est.tonsByType.stainless,2)+"T"},
               ].map(s=>(
                 <button key={s.id} onClick={()=>setTakeoffTab(s.id)} style={{
-                  background:"none",border:"none",cursor:"pointer",padding:"8px 20px",
-                  fontSize:10,letterSpacing:2,textTransform:"uppercase",
+                  background: takeoffTab===s.id ? (s.id==="structural"?"#e85c2620":"#3b82f620") : "#161b22",
+                  border: `1px solid ${takeoffTab===s.id ? s.color : "#2d3340"}`,
+                  borderRadius:6,
+                  cursor:"pointer",padding:"8px 20px",
+                  fontSize:11,letterSpacing:1.5,textTransform:"uppercase",fontWeight:700,
                   color:takeoffTab===s.id?s.color:"#6b7280",
-                  borderBottom:takeoffTab===s.id?`2px solid ${s.color}`:"2px solid transparent",
-                  fontFamily:"inherit",marginBottom:-1,
+                  fontFamily:"inherit",
                 }}>
-                  {s.label}
-                  <span style={{marginLeft:8,fontSize:9,color:"#4b5563"}}>
-                    {s.id==="structural"
-                      ? fmtN(est.tonsByType.structural,2)+"T"
-                      : fmtN(est.tonsByType.misc+est.tonsByType.stainless,2)+"T"}
-                  </span>
+                  {s.label} <span style={{fontSize:10,fontWeight:400,marginLeft:6,color: takeoffTab===s.id?s.color:"#4b5563"}}>{s.tons}</span>
                 </button>
               ))}
             </div>
