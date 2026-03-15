@@ -6,6 +6,7 @@ import {
   DEFAULT_JOB_ERECTORS,
   fmt, fmtD, fmtN, today, ci, sel,
 } from './constants.js';
+import { AISC_DB } from './aisc_data.js';
 import { SH, SecLbl, QSec, R, Lbl, Note, Badge, Chip, Toggle, Btn } from './components.jsx';
 
 // ── FILE UPLOAD ────────────────────────────────────────────────────────────────
@@ -112,6 +113,18 @@ const PLATE_WT = {
 const PLATE_THICKNESSES = Object.keys(PLATE_WT);
 const MISC_ITEM_TYPES = ["L (Angle)","C / MC","2L (Dbl Angle)","Plate","HSS Rect","Pipe","Stainless","Other"];
 
+// Normalize section name for AISC lookup
+function lookupWplf(shape) {
+  if (!shape) return null;
+  const key = shape.toUpperCase().replace(/\s+/g,'').replace(/X/g,'X');
+  if (AISC_DB[key] !== undefined) return AISC_DB[key];
+  // try stripping spaces variations
+  for (const k of Object.keys(AISC_DB)) {
+    if (k.replace(/\s/g,'') === key.replace(/\s/g,'')) return AISC_DB[k];
+  }
+  return null;
+}
+
 function rowTotalLbs(r) {
   if (r.isPlate) {
     const w=parseFloat(r.widthFt)||0, l=parseFloat(r.lengthFt)||0, q=parseFloat(r.qty)||0;
@@ -139,7 +152,16 @@ function newStructRow(cf="") {
 function StructuralTakeoff({ rows, setRows, defaultCf }) {
   const add = () => setRows(r=>[...r, newStructRow(defaultCf)]);
   const del = id => setRows(r=>r.filter(x=>x.id!==id));
-  const upd = (id,k,v) => setRows(r=>r.map(x=>x.id===id?{...x,[k]:v}:x));
+  const upd = (id,k,v) => setRows(r=>r.map(x=>{
+    if (x.id!==id) return x;
+    const u = {...x,[k]:v};
+    if (k==='shape') {
+      const found = lookupWplf(v);
+      if (found !== null) u.weightPerFt = String(found);
+      u.autoWt = (found !== null);
+    }
+    return u;
+  }));
 
   const totLbs  = rows.reduce((a,r)=>a+rowTotalLbs(r), 0);
   const totCost = rows.reduce((a,r)=>{ const lbs=rowTotalLbs(r),cf=parseFloat(r.costFactor)||0; return a+(cf*lbs); }, 0);
@@ -240,6 +262,11 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
     if (x.id!==id) return x;
     const u = {...x,[k]:v};
     if (k==="itemType") u.isPlate = (v==="Plate");
+    if (k==='shape' && !u.isPlate) {
+      const found = lookupWplf(v);
+      if (found !== null) { u.weightPerFt = String(found); u.autoWt = true; }
+    }
+    if (k==='weightPerFt') u.autoWt = false;
     return u;
   }));
 
@@ -286,7 +313,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
                       </select>
                     ) : (
                       <input type="number" value={r.weightPerFt} onChange={e=>upd(r.id,"weightPerFt",e.target.value)}
-                        placeholder="lb/ft" style={INP_R(70)}/>
+                        placeholder="lb/ft" style={{...INP_R(70), color: r.autoWt ? "#6b7280" : "#edf0f4"}}/>
                     )}
                   </td>
                   <td style={{...TD,textAlign:"center"}}>
