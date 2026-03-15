@@ -1,0 +1,45 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0e1117; font-family: 'IBM Plex Mono', 'Courier New', monospace; color: #c8cdd6; min-height: 100vh; }
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+input:focus, select:focus { outline: 1px solid #e85c26; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0e1117; }
+::-webkit-scrollbar-thumb { background: #2d3340; border-radius: 3px; }
+table { border-collapse: collapse; width: 100%; }
+
+@media print {
+  body { background: white; color: #111; font-family: Arial, sans-serif; }
+  #root { display: none; }
+  #print-view { display: block !important; }
+}
+
+#print-view {
+  display: none;
+  padding: 40px;
+  font-family: Arial, sans-serif;
+  color: #111;
+  max-width: 800px;
+  margin: 0 auto;
+}
+#print-view .pv-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #c0392b; padding-bottom: 16px; margin-bottom: 24px; }
+#print-view .pv-co { font-size: 22px; font-weight: 700; color: #c0392b; }
+#print-view .pv-co-sub { font-size: 11px; color: #666; margin-top: 3px; }
+#print-view .pv-meta { text-align: right; font-size: 12px; }
+#print-view .pv-meta strong { font-size: 16px; color: #111; }
+#print-view .pv-job { background: #f8f8f8; padding: 14px 18px; border-radius: 6px; margin-bottom: 20px; }
+#print-view .pv-job-row { display: flex; gap: 32px; flex-wrap: wrap; }
+#print-view .pv-job-item { margin-bottom: 6px; }
+#print-view .pv-job-item label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #888; display: block; margin-bottom: 2px; }
+#print-view .pv-job-item span { font-size: 13px; font-weight: 600; }
+#print-view .pv-section { margin-bottom: 20px; }
+#print-view .pv-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #888; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin-bottom: 10px; }
+#print-view .pv-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+#print-view .pv-table th { text-align: left; padding: 7px 10px; background: #f0f0f0; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #555; }
+#print-view .pv-table td { padding: 7px 10px; border-bottom: 1px solid #eee; }
+#print-view .pv-table .right { text-align: right; }
+#print-view .pv-total-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+#print-view .pv-total-row.hi { border-top: 2px solid #c0392b; border-bottom: 2px solid #c0392b; font-weight: 700; font-size: 18px; color: #c0392b; margin-top: 4px; padding-top: 10px; }
+#print-view .pv-notes { border: 1px solid #ddd; border-radius: 6px; padding: 14px; min-height: 80px; font-size: 12px; color: #555; margin-bottom: 20px; }
+#print-view .pv-footer { font-size: 10px; color: #888; text-align: center; border-top: 1px solid #ddd; padding-top: 12px; }
+#print-view .pv-badges { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+#print-view .pv-badge { background: #fee; border: 1px solid #c0392b44; border-radius: 3px; padding: 2px 8px; font-size: 10px; color: #c0392b; }
