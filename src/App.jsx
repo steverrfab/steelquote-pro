@@ -903,24 +903,19 @@ export default function App() {
             )}
 
             {/* Sub-tab selector */}
-            <div style={{display:"flex",gap:0,marginBottom:20,borderBottom:"1px solid #1e2532"}}>
+            <div style={{display:"flex",gap:8,marginBottom:18}}>
               {[
-                {id:"structural", label:"Structural Steel", color:"#e85c26"},
-                {id:"misc",       label:"Misc Metals",      color:"#3b82f6"},
+                {id:"structural", label:"Structural Steel", color:"#e85c26", tons: fmtN(est.tonsByType.structural,2)+"T"},
+                {id:"misc",       label:"Misc Metals",      color:"#3b82f6", tons: fmtN((est.tonsByType.misc||0)+(est.tonsByType.stainless||0),2)+"T"},
               ].map(s=>(
                 <button key={s.id} onClick={()=>setTakeoffTab(s.id)} style={{
-                  background:"none",border:"none",cursor:"pointer",padding:"8px 20px",
-                  fontSize:10,letterSpacing:2,textTransform:"uppercase",
-                  color:takeoffTab===s.id?s.color:"#6b7280",
-                  borderBottom:takeoffTab===s.id?`2px solid ${s.color}`:"2px solid transparent",
-                  fontFamily:"inherit",marginBottom:-1,
+                  background: takeoffTab===s.id ? s.color+"22" : "#1c2128",
+                  border: "1px solid "+(takeoffTab===s.id ? s.color : "#30363d"),
+                  borderRadius:7,cursor:"pointer",padding:"8px 20px",
+                  fontSize:11,letterSpacing:1.5,textTransform:"uppercase",fontWeight:700,
+                  color:takeoffTab===s.id?s.color:"#8b949e",fontFamily:"inherit",transition:"all 0.15s",
                 }}>
-                  {s.label}
-                  <span style={{marginLeft:8,fontSize:9,color:"#4b5563"}}>
-                    {s.id==="structural"
-                      ? fmtN(est.tonsByType.structural,2)+"T"
-                      : fmtN(est.tonsByType.misc+est.tonsByType.stainless,2)+"T"}
-                  </span>
+                  {s.label}&nbsp;&nbsp;<span style={{fontSize:10,fontWeight:400,opacity:0.7}}>{s.tons}</span>
                 </button>
               ))}
             </div>
