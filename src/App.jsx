@@ -80,9 +80,7 @@ function FileUploadZone({ onImport }) {
         onDragLeave={()=>setDragging(false)}
         onDrop={e=>{e.preventDefault();setDragging(false);handle(e.dataTransfer.files[0]);}}
         onClick={()=>fileRef.current.click()}
-        style={{border:`2px dashed ${dragging?"#e85c26":"#2d3340"}`,borderRadius:8,padding:"16px 24px",
-          cursor:"pointer",background:dragging?"#e85c2610":"#13171f",transition:"all 0.2s",
-          marginBottom:10,display:"flex",alignItems:"center",gap:16}}>
+        style={{border:`2px dashed ${dragging?"#e85c26":"#2d3340"}`,borderRadius:8,padding:"16px 24px",cursor:"pointer",background:dragging?"#e85c2610":"#13171f",transition:"all 0.2s",marginBottom:10,display:"flex",alignItems:"center",gap:16}}>
         <div style={{fontSize:20}}>📎</div>
         <div>
           <div style={{fontSize:12,color:"#edf0f4",fontWeight:600}}>Upload Takeoff File</div>
@@ -137,13 +135,13 @@ function rowType(r) {
 }
 
 // shared table styles
-const TH   = {fontSize:10,fontWeight:700,color:"#8b949e",padding:"10px 12px",borderBottom:"2px solid #21262d",textAlign:"left",whiteSpace:"nowrap",letterSpacing:"1.5px",textTransform:"uppercase",background:"#161b22"};
-const TH_R = {fontSize:10,fontWeight:700,color:"#8b949e",padding:"10px 12px",borderBottom:"2px solid #21262d",textAlign:"right",whiteSpace:"nowrap",letterSpacing:"1.5px",textTransform:"uppercase",background:"#161b22"};
-const TD   = {padding:"9px 12px",borderBottom:"1px solid #0d1117",verticalAlign:"middle"};
-const TD_R = {padding:"9px 12px",borderBottom:"1px solid #0d1117",verticalAlign:"middle",textAlign:"right"};
-const INP   = (w) => ({background:"#1c2128",border:"1px solid #30363d",borderRadius:6,color:"#e6edf3",padding:"6px 10px",fontSize:13,fontFamily:"inherit",width:w||"100%",outline:"none"});
-const INP_R = (w) => ({background:"#1c2128",border:"1px solid #30363d",borderRadius:6,color:"#e6edf3",padding:"6px 10px",fontSize:13,fontFamily:"inherit",width:w||"100%",outline:"none",textAlign:"right"});
-const SEL   = (w) => ({background:"#1c2128",border:"1px solid #30363d",borderRadius:6,color:"#e6edf3",padding:"6px 10px",fontSize:13,fontFamily:"inherit",width:w||"100%",outline:"none",cursor:"pointer"});
+const TH   = {fontSize:11,fontWeight:600,color:"#6b7280",padding:"10px 10px",borderBottom:"2px solid #1e2532",textAlign:"left",whiteSpace:"nowrap",background:"#13171f"};
+const TH_R = {fontSize:11,fontWeight:600,color:"#6b7280",padding:"10px 10px",borderBottom:"2px solid #1e2532",textAlign:"right",whiteSpace:"nowrap",background:"#13171f"};
+const TD   = {padding:"7px 10px",borderBottom:"1px solid #1a2030",verticalAlign:"middle"};
+const TD_R = {padding:"7px 10px",borderBottom:"1px solid #1a2030",verticalAlign:"middle",textAlign:"right"};
+const INP   = (w) => ({background:"#0e1117",border:"1px solid #2d3340",borderRadius:4,color:"#edf0f4",padding:"5px 8px",fontSize:13,fontFamily:"inherit",width:w||"100%",outline:"none"});
+const INP_R = (w) => ({background:"#0e1117",border:"1px solid #2d3340",borderRadius:4,color:"#edf0f4",padding:"5px 8px",fontSize:13,fontFamily:"inherit",width:w||"100%",outline:"none",textAlign:"right"});
+const SEL   = (w) => ({background:"#0e1117",border:"1px solid #2d3340",borderRadius:4,color:"#edf0f4",padding:"5px 8px",fontSize:13,fontFamily:"inherit",width:w||"100%",outline:"none",cursor:"pointer"});
 
 // ── STRUCTURAL TAKEOFF ─────────────────────────────────────────────────────────
 function newStructRow(cf="") {
@@ -190,7 +188,7 @@ function StructuralTakeoff({ rows, setRows, defaultCf }) {
               const cf  = parseFloat(r.costFactor)||0;
               const cost = cf * lbs;
               return (
-                <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22"}}>
+                <tr key={r.id} style={{background:i%2===0?"transparent":"#13171f"}}>
                   <td style={TD}>
                     <input value={r.shape} onChange={e=>upd(r.id,"shape",e.target.value.toUpperCase())}
                       placeholder="W12X53" style={INP(160)}/>
@@ -297,7 +295,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
               const cf   = parseFloat(r.costFactor)||0;
               const cost = cf * lbs;
               return (
-                <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22"}}>
+                <tr key={r.id} style={{background:i%2===0?"transparent":"#13171f"}}>
                   <td style={TD}>
                     <select value={r.itemType} onChange={e=>upd(r.id,"itemType",e.target.value)} style={SEL(110)}>
                       {MISC_ITEM_TYPES.map(t=><option key={t}>{t}</option>)}
@@ -543,7 +541,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
               </thead>
               <tbody>
                 {(suppliers[activeSup]||[]).map((row,i) => (
-                  <tr key={i} style={{background:i%2===0?"#0d1117":"#161b22"}}>
+                  <tr key={i} style={{background:i%2===0?"transparent":"#13171f"}}>
                     <td style={{padding:"6px 10px"}}>
                       <input value={row.section} onChange={e=>setSuppliers(s=>({...s,[activeSup]:s[activeSup].map((r,j)=>j===i?{...r,section:e.target.value}:r)}))} style={ci(120)}/>
                     </td>
@@ -588,7 +586,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
               </thead>
               <tbody>
                 {erectorList.map((row,i) => (
-                  <tr key={i} style={{background:i%2===0?"#0d1117":"#161b22"}}>
+                  <tr key={i} style={{background:i%2===0?"transparent":"#13171f"}}>
                     <td style={{padding:"6px 10px"}}><input value={row.name} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,name:e.target.value}:x))} style={ci(170)}/></td>
                     <td style={{padding:"6px 10px"}}><input type="number" value={row.rate} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,rate:+e.target.value}:x))} style={{...ci(75),textAlign:"right"}}/></td>
                     <td style={{padding:"6px 10px"}}><input type="number" value={row.mob} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,mob:+e.target.value}:x))} style={{...ci(75),textAlign:"right"}}/></td>
@@ -623,7 +621,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
               </thead>
               <tbody>
                 {galvanizers.map((row,i) => (
-                  <tr key={i} style={{background:i%2===0?"#0d1117":"#161b22"}}>
+                  <tr key={i} style={{background:i%2===0?"transparent":"#13171f"}}>
                     <td style={{padding:"6px 10px"}}><input value={row.name} onChange={e=>setGalvanizers(r=>r.map((x,j)=>j===i?{...x,name:e.target.value}:x))} style={ci(180)}/></td>
                     <td style={{padding:"6px 10px"}}>
                       <div style={{display:"flex",alignItems:"center",gap:4}}>
@@ -819,11 +817,10 @@ export default function App() {
   ];
 
   return (
-    <div style={{fontFamily:"'Barlow',sans-serif",background:"#0f1117",minHeight:"100vh",color:"#c8cdd6"}}>
+    <div style={{fontFamily:"'Barlow',sans-serif",background:"#0e1117",minHeight:"100vh",color:"#c8cdd6",fontSize:14}}>
 
       {/* HEADER */}
-      <div style={{background:"#161b22",borderBottom:"2px solid #e85c26"}}>
-        <div style={{maxWidth:1400,margin:"0 auto",padding:"12px 28px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
+      <div style={{background:"#13171f",borderBottom:"2px solid #e85c26",padding:"14px 28px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
         <div>
           <div style={{fontSize:10,color:"#e85c26",letterSpacing:3,textTransform:"uppercase",marginBottom:4}}>SteelQuote Pro</div>
           <div style={{fontSize:18,color:"#edf0f4",fontWeight:700}}>Fabrication Estimating System</div>
@@ -845,12 +842,10 @@ export default function App() {
               style={{background:"transparent",border:"1px solid #2d3340",borderRadius:4,color:"#edf0f4",padding:"4px 10px",fontSize:13,width:220,fontFamily:"inherit",textAlign:"right"}}/>
           </div>
         </div>
-        </div>
       </div>
 
       {/* SUMMARY BAR */}
-      <div style={{background:"#0d1117",borderBottom:"1px solid #21262d"}}>
-        <div style={{maxWidth:1400,margin:"0 auto",padding:"10px 28px",display:"flex",gap:22,alignItems:"center",flexWrap:"wrap"}}>
+      <div style={{background:"#161b24",borderBottom:"1px solid #1e2532",padding:"10px 28px",display:"flex",gap:24,alignItems:"center",flexWrap:"wrap"}}>
         {WORK_TYPES.map(({id,label,color}) => (
           <div key={id}>
             <div style={{fontSize:9,color,letterSpacing:1.5,textTransform:"uppercase",marginBottom:2}}>{label}</div>
@@ -866,8 +861,7 @@ export default function App() {
         ))}
         <div style={{marginLeft:"auto",textAlign:"right"}}>
           <div style={{fontSize:9,color:"#e85c26",letterSpacing:1.5,textTransform:"uppercase",marginBottom:2}}>Total Quote</div>
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,color:"#e6edf3",fontWeight:800}}>{fmt(est.total)}</div>
-        </div>
+          <div style={{fontSize:24,color:"#edf0f4",fontWeight:800}}>{fmt(est.total)}</div>
         </div>
       </div>
 
@@ -875,21 +869,21 @@ export default function App() {
       <div style={{display:"flex",borderBottom:"1px solid #1e2532",padding:"0 28px",background:"#0e1117",overflowX:"auto"}}>
         {TABS.map(t => (
           <button key={t.id} onClick={()=>setTab(t.id)} style={{
-            background:"none",border:"none",cursor:"pointer",padding:"10px 14px",
-            fontSize:10,letterSpacing:2,textTransform:"uppercase",whiteSpace:"nowrap",
+            background:"none",border:"none",cursor:"pointer",padding:"10px 16px",
+            fontSize:11,letterSpacing:"2px",textTransform:"uppercase",whiteSpace:"nowrap",fontWeight:600,
             color:tab===t.id?"#e85c26":"#6b7280",
             borderBottom:tab===t.id?"2px solid #e85c26":"2px solid transparent",
-            fontFamily:"inherit",marginBottom:-1,
+            fontFamily:"inherit",marginBottom:-1,transition:"color 0.15s",
           }}>{t.label}</button>
         ))}
       </div>
 
-      <div style={{padding:"28px",maxWidth:1400,margin:"0 auto"}}>
+      <div style={{padding:28}}>
 
         {/* TAKEOFF — two sub-tabs */}
         {tab === "takeoff" && (
           <div>
-            <div style={{marginBottom:18}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:700,color:"#e6edf3",letterSpacing:0.5}}>Material Takeoff</div><div style={{fontSize:12,color:"#8b949e",marginTop:3}}>Type a section name and weight fills automatically. Upload a takeoff file to populate all rows at once.</div></div>
+            <div style={{marginBottom:20}}><h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,fontWeight:700,color:"#edf0f4",letterSpacing:"0.5px"}}>Material Takeoff</h2><p style={{fontSize:12,color:"#6b7280",marginTop:3}}>Type a section name and weight fills automatically. Upload a takeoff file to populate all rows at once.</p></div>
 
             <FileUploadZone onImport={(sRows, mRows, mode) => {
               if (mode === "replace") { setStructRows(sRows.length?sRows:[newStructRow()]); setMiscRows(mRows.length?mRows:[newMiscRow()]); }
@@ -902,24 +896,25 @@ export default function App() {
               <div style={{marginBottom:14,padding:"8px 14px",background:"#10b98122",border:"1px solid #10b981",borderRadius:6,fontSize:11,color:"#10b981"}}>{importMsg}</div>
             )}
 
-            {/* Sub-tab selector */}
-            <div style={{display:"flex",gap:8,marginBottom:18}}>
+                        {/* Sub-tab selector */}
+            <div style={{display:"flex",gap:0,marginBottom:20,borderBottom:"1px solid #1e2532"}}>
               {[
-                {id:"structural", label:"Structural Steel", color:"#e85c26", tons: fmtN(est.tonsByType.structural,2)+"T"},
-                {id:"misc",       label:"Misc Metals",      color:"#3b82f6", tons: fmtN((est.tonsByType.misc||0)+(est.tonsByType.stainless||0),2)+"T"},
+                {id:"structural", label:"Structural Steel", color:"#e85c26"},
+                {id:"misc",       label:"Misc Metals",      color:"#3b82f6"},
               ].map(s=>(
                 <button key={s.id} onClick={()=>setTakeoffTab(s.id)} style={{
-                  background: takeoffTab===s.id ? s.color+"22" : "#1c2128",
-                  border: "1px solid "+(takeoffTab===s.id ? s.color : "#30363d"),
-                  borderRadius:7,cursor:"pointer",padding:"8px 20px",
-                  fontSize:11,letterSpacing:1.5,textTransform:"uppercase",fontWeight:700,
-                  color:takeoffTab===s.id?s.color:"#8b949e",fontFamily:"inherit",transition:"all 0.15s",
+                  background:"none",border:"none",cursor:"pointer",padding:"8px 20px",
+                  fontSize:12,letterSpacing:"1.5px",textTransform:"uppercase",fontWeight:600,
+                  color:takeoffTab===s.id?s.color:"#6b7280",
+                  borderBottom:takeoffTab===s.id?`2px solid ${s.color}`:"2px solid transparent",
+                  fontFamily:"inherit",marginBottom:-1,
                 }}>
-                  {s.label}&nbsp;&nbsp;<span style={{fontSize:10,fontWeight:400,opacity:0.7}}>{s.tons}</span>
+                  {s.label}&nbsp;<span style={{fontSize:10,color:"#4b5563",fontWeight:400}}>
+                    {s.id==="structural"?fmtN(est.tonsByType.structural,2)+"T":fmtN((est.tonsByType.misc||0)+(est.tonsByType.stainless||0),2)+"T"}
+                  </span>
                 </button>
               ))}
             </div>
-
             {takeoffTab === "structural" && (
               <StructuralTakeoff rows={structRows} setRows={setStructRows} defaultCf={defaultCf}/>
             )}
@@ -965,7 +960,7 @@ export default function App() {
                     {structRows.filter(r=>rowTotalLbs(r)>0).map((r,i)=>{
                       const lbs=rowTotalLbs(r), cf=parseFloat(r.costFactor)||0, cost=(cf*lbs)/100;
                       return (
-                        <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22"}}>
+                        <tr key={r.id} style={{background:i%2===0?"transparent":"#13171f"}}>
                           <td style={{padding:"7px 10px",color:"#edf0f4",fontWeight:600}}>{r.shape||"—"}</td>
                           <td style={{padding:"7px 10px"}}>{Math.round(lbs).toLocaleString()}</td>
                           <td style={{padding:"7px 10px"}}>{fmtN(lbs/2000,3)} T</td>
@@ -995,7 +990,7 @@ export default function App() {
                     {miscRows.filter(r=>rowTotalLbs(r)>0).map((r,i)=>{
                       const lbs=rowTotalLbs(r), cf=parseFloat(r.costFactor)||0, cost=(cf*lbs)/100;
                       return (
-                        <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22"}}>
+                        <tr key={r.id} style={{background:i%2===0?"transparent":"#13171f"}}>
                           <td style={{padding:"7px 10px",fontSize:9,color:"#3b82f6",textTransform:"uppercase"}}>{r.itemType}</td>
                           <td style={{padding:"7px 10px",color:"#edf0f4",fontWeight:600}}>{r.shape||"—"}</td>
                           <td style={{padding:"7px 10px"}}>{Math.round(lbs).toLocaleString()}</td>
