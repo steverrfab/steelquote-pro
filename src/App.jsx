@@ -913,20 +913,21 @@ export default function App() {
               <div style={{marginBottom:14,padding:"8px 14px",background:"#10b98122",border:"1px solid #10b981",borderRadius:6,fontSize:11,color:"#10b981"}}>{importMsg}</div>
             )}
 
-                        {/* Sub-tab selector */}
-            <div style={{display:"flex",gap:0,marginBottom:20,borderBottom:"1px solid #1e2532"}}>
+                                    {/* Sub-tab selector */}
+            <div style={{display:"flex",gap:8,marginBottom:20}}>
               {[
                 {id:"structural", label:"Structural Steel", color:"#e85c26"},
                 {id:"misc",       label:"Misc Metals",      color:"#3b82f6"},
               ].map(s=>(
                 <button key={s.id} onClick={()=>setTakeoffTab(s.id)} style={{
-                  background:"none",border:"none",cursor:"pointer",padding:"8px 20px",
-                  fontSize:12,letterSpacing:"1.5px",textTransform:"uppercase",fontWeight:600,
-                  color:takeoffTab===s.id?s.color:"#6b7280",
-                  borderBottom:takeoffTab===s.id?`2px solid ${s.color}`:"2px solid transparent",
-                  fontFamily:"inherit",marginBottom:-1,transition:"color 0.15s",
+                  background: takeoffTab===s.id ? s.color+"22" : "#13171f",
+                  border: "1px solid "+(takeoffTab===s.id ? s.color : "#2d3340"),
+                  borderRadius:6, cursor:"pointer", padding:"8px 20px",
+                  fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", fontWeight:600,
+                  color: takeoffTab===s.id ? s.color : "#6b7280",
+                  fontFamily:"inherit", transition:"all 0.15s",
                 }}>
-                  {s.label}&nbsp;<span style={{fontSize:10,color:"#4b5563",fontWeight:400}}>
+                  {s.label}&nbsp;<span style={{fontSize:10,fontWeight:400,opacity:0.6}}>
                     {s.id==="structural"?fmtN(est.tonsByType.structural,2)+"T":fmtN((est.tonsByType.misc||0)+(est.tonsByType.stainless||0),2)+"T"}
                   </span>
                 </button>
