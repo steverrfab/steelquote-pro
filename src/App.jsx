@@ -190,7 +190,7 @@ function StructuralTakeoff({ rows, setRows, defaultCf }) {
               const cf  = parseFloat(r.costFactor)||0;
               const cost = cf * lbs;
               return (
-                <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22",transition:"background 0.1s"}}>
+                <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22"}}>
                   <td style={TD}>
                     <input value={r.shape} onChange={e=>upd(r.id,"shape",e.target.value.toUpperCase())}
                       placeholder="W12X53" style={INP(160)}/>
@@ -297,7 +297,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
               const cf   = parseFloat(r.costFactor)||0;
               const cost = cf * lbs;
               return (
-                <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22",transition:"background 0.1s"}}>
+                <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22"}}>
                   <td style={TD}>
                     <select value={r.itemType} onChange={e=>upd(r.id,"itemType",e.target.value)} style={SEL(110)}>
                       {MISC_ITEM_TYPES.map(t=><option key={t}>{t}</option>)}
@@ -543,7 +543,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
               </thead>
               <tbody>
                 {(suppliers[activeSup]||[]).map((row,i) => (
-                  <tr key={i} style={{background:i%2===0?"#0d1117":"#161b22",transition:"background 0.1s"}}>
+                  <tr key={i} style={{background:i%2===0?"#0d1117":"#161b22"}}>
                     <td style={{padding:"6px 10px"}}>
                       <input value={row.section} onChange={e=>setSuppliers(s=>({...s,[activeSup]:s[activeSup].map((r,j)=>j===i?{...r,section:e.target.value}:r)}))} style={ci(120)}/>
                     </td>
@@ -588,7 +588,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
               </thead>
               <tbody>
                 {erectorList.map((row,i) => (
-                  <tr key={i} style={{background:i%2===0?"#0d1117":"#161b22",transition:"background 0.1s"}}>
+                  <tr key={i} style={{background:i%2===0?"#0d1117":"#161b22"}}>
                     <td style={{padding:"6px 10px"}}><input value={row.name} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,name:e.target.value}:x))} style={ci(170)}/></td>
                     <td style={{padding:"6px 10px"}}><input type="number" value={row.rate} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,rate:+e.target.value}:x))} style={{...ci(75),textAlign:"right"}}/></td>
                     <td style={{padding:"6px 10px"}}><input type="number" value={row.mob} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,mob:+e.target.value}:x))} style={{...ci(75),textAlign:"right"}}/></td>
@@ -623,7 +623,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
               </thead>
               <tbody>
                 {galvanizers.map((row,i) => (
-                  <tr key={i} style={{background:i%2===0?"#0d1117":"#161b22",transition:"background 0.1s"}}>
+                  <tr key={i} style={{background:i%2===0?"#0d1117":"#161b22"}}>
                     <td style={{padding:"6px 10px"}}><input value={row.name} onChange={e=>setGalvanizers(r=>r.map((x,j)=>j===i?{...x,name:e.target.value}:x))} style={ci(180)}/></td>
                     <td style={{padding:"6px 10px"}}>
                       <div style={{display:"flex",alignItems:"center",gap:4}}>
@@ -819,10 +819,11 @@ export default function App() {
   ];
 
   return (
-    <div style={{fontFamily:"'Barlow',sans-serif",background:"#0d1117",minHeight:"100vh",color:"#e6edf3"}}>
+    <div style={{fontFamily:"'Barlow',sans-serif",background:"#0f1117",minHeight:"100vh",color:"#c8cdd6"}}>
 
       {/* HEADER */}
-      <div style={{background:"#161b22",borderBottom:"2px solid #e85c26",padding:"12px 24px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
+      <div style={{background:"#161b22",borderBottom:"2px solid #e85c26"}}>
+        <div style={{maxWidth:1400,margin:"0 auto",padding:"12px 28px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
         <div>
           <div style={{fontSize:10,color:"#e85c26",letterSpacing:3,textTransform:"uppercase",marginBottom:4}}>SteelQuote Pro</div>
           <div style={{fontSize:18,color:"#edf0f4",fontWeight:700}}>Fabrication Estimating System</div>
@@ -844,10 +845,12 @@ export default function App() {
               style={{background:"transparent",border:"1px solid #2d3340",borderRadius:4,color:"#edf0f4",padding:"4px 10px",fontSize:13,width:220,fontFamily:"inherit",textAlign:"right"}}/>
           </div>
         </div>
+        </div>
       </div>
 
       {/* SUMMARY BAR */}
-      <div style={{background:"#0d1117",borderBottom:"1px solid #21262d",padding:"10px 24px",display:"flex",gap:22,alignItems:"center",flexWrap:"wrap"}}>
+      <div style={{background:"#0d1117",borderBottom:"1px solid #21262d"}}>
+        <div style={{maxWidth:1400,margin:"0 auto",padding:"10px 28px",display:"flex",gap:22,alignItems:"center",flexWrap:"wrap"}}>
         {WORK_TYPES.map(({id,label,color}) => (
           <div key={id}>
             <div style={{fontSize:9,color,letterSpacing:1.5,textTransform:"uppercase",marginBottom:2}}>{label}</div>
@@ -865,6 +868,7 @@ export default function App() {
           <div style={{fontSize:9,color:"#e85c26",letterSpacing:1.5,textTransform:"uppercase",marginBottom:2}}>Total Quote</div>
           <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,color:"#e6edf3",fontWeight:800}}>{fmt(est.total)}</div>
         </div>
+        </div>
       </div>
 
       {/* MAIN TABS */}
@@ -880,7 +884,7 @@ export default function App() {
         ))}
       </div>
 
-      <div style={{padding:28}}>
+      <div style={{padding:"28px",maxWidth:1400,margin:"0 auto"}}>
 
         {/* TAKEOFF — two sub-tabs */}
         {tab === "takeoff" && (
@@ -966,7 +970,7 @@ export default function App() {
                     {structRows.filter(r=>rowTotalLbs(r)>0).map((r,i)=>{
                       const lbs=rowTotalLbs(r), cf=parseFloat(r.costFactor)||0, cost=(cf*lbs)/100;
                       return (
-                        <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22",transition:"background 0.1s"}}>
+                        <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22"}}>
                           <td style={{padding:"7px 10px",color:"#edf0f4",fontWeight:600}}>{r.shape||"—"}</td>
                           <td style={{padding:"7px 10px"}}>{Math.round(lbs).toLocaleString()}</td>
                           <td style={{padding:"7px 10px"}}>{fmtN(lbs/2000,3)} T</td>
@@ -996,7 +1000,7 @@ export default function App() {
                     {miscRows.filter(r=>rowTotalLbs(r)>0).map((r,i)=>{
                       const lbs=rowTotalLbs(r), cf=parseFloat(r.costFactor)||0, cost=(cf*lbs)/100;
                       return (
-                        <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22",transition:"background 0.1s"}}>
+                        <tr key={r.id} style={{background:i%2===0?"#0d1117":"#161b22"}}>
                           <td style={{padding:"7px 10px",fontSize:9,color:"#3b82f6",textTransform:"uppercase"}}>{r.itemType}</td>
                           <td style={{padding:"7px 10px",color:"#edf0f4",fontWeight:600}}>{r.shape||"—"}</td>
                           <td style={{padding:"7px 10px"}}>{Math.round(lbs).toLocaleString()}</td>
