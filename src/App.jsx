@@ -80,22 +80,22 @@ function FileUploadZone({ onImport }) {
         onDragLeave={()=>setDragging(false)}
         onDrop={e=>{e.preventDefault();setDragging(false);handle(e.dataTransfer.files[0]);}}
         onClick={()=>fileRef.current.click()}
-        style={{border:`2px dashed ${dragging?ACC:BDR}`,borderRadius:8,padding:"16px 24px",
-          cursor:"pointer",background:dragging?"#e85c2610":BG2,transition:"all 0.2s",
+        style={{border:`2px dashed ${dragging?"#e85c26":"#2d3340"}`,borderRadius:8,padding:"16px 24px",
+          cursor:"pointer",background:dragging?"#e85c2610":"#13171f",transition:"all 0.2s",
           marginBottom:10,display:"flex",alignItems:"center",gap:16}}>
         <div style={{fontSize:20}}>📎</div>
         <div>
-          <div style={{fontSize:12,color:TXT,fontWeight:600}}>Upload Takeoff File</div>
-          <div style={{fontSize:10,color:TXT3,marginTop:2}}>Drag & drop or click — Excel (.xlsx, .xls) or CSV</div>
-          <div style={{fontSize:10,color:TXT3,marginTop:2}}>Structural rows → Structural tab · Misc rows → Misc Metals tab</div>
+          <div style={{fontSize:12,color:"#edf0f4",fontWeight:600}}>Upload Takeoff File</div>
+          <div style={{fontSize:10,color:"#6b7280",marginTop:2}}>Drag & drop or click — Excel (.xlsx, .xls) or CSV</div>
+          <div style={{fontSize:10,color:"#4b5563",marginTop:2}}>Structural rows → Structural tab · Misc rows → Misc Metals tab</div>
         </div>
         <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={e=>handle(e.target.files[0])} style={{display:"none"}}/>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <span style={{fontSize:10,color:TXT3}}>On import:</span>
+        <span style={{fontSize:10,color:"#6b7280"}}>On import:</span>
         {[["append","Add to existing"],["replace","Replace all rows"]].map(([val,label])=>(
-          <label key={val} style={{display:"flex",alignItems:"center",gap:5,fontSize:10,color:mode===val?ACC:TXT3,cursor:"pointer"}}>
-            <input type="radio" value={val} checked={mode===val} onChange={()=>setMode(val)} style={{accentColor:ACC}}/>{label}
+          <label key={val} style={{display:"flex",alignItems:"center",gap:5,fontSize:10,color:mode===val?"#e85c26":"#6b7280",cursor:"pointer"}}>
+            <input type="radio" value={val} checked={mode===val} onChange={()=>setMode(val)} style={{accentColor:"#e85c26"}}/>{label}
           </label>
         ))}
       </div>
@@ -137,26 +137,13 @@ function rowType(r) {
 }
 
 // shared table styles
-// ── CARBON DESIGN SYSTEM ─────────────────────────────────────────────────────
-const BG   = "#0a0a0a";
-const BG2  = "#111111";
-const BG3  = "#161616";
-const BDR  = "#1a1a1a";
-const BDR2 = "#222222";
-const BDR3 = "#333333";
-const TXT  = "#ffffff";
-const TXT2 = "#888888";
-const TXT3 = "#444444";
-const ACC  = ACC;
-const BLUE = "#60a5fa";
-
-const TH   = {fontSize:10,fontWeight:700,color:TXT3,padding:"12px 10px",borderBottom:"1px solid "+BDR,textAlign:"left",whiteSpace:"nowrap",letterSpacing:"2px",textTransform:"uppercase",background:"transparent"};
-const TH_R = {fontSize:10,fontWeight:700,color:TXT3,padding:"12px 10px",borderBottom:"1px solid "+BDR,textAlign:"right",whiteSpace:"nowrap",letterSpacing:"2px",textTransform:"uppercase",background:"transparent"};
-const TD   = {padding:"10px 10px",borderBottom:"1px solid "+BDR,verticalAlign:"middle"};
-const TD_R = {padding:"10px 10px",borderBottom:"1px solid "+BDR,verticalAlign:"middle",textAlign:"right"};
-const INP   = (w) => ({background:BG2,border:"1px solid "+BDR,borderRadius:3,color:TXT,padding:"7px 10px",fontSize:13,fontFamily:"inherit",width:w||"100%",outline:"none",transition:"border-color 0.15s"});
-const INP_R = (w) => ({background:BG2,border:"1px solid "+BDR,borderRadius:3,color:TXT,padding:"7px 10px",fontSize:13,fontFamily:"inherit",width:w||"100%",outline:"none",transition:"border-color 0.15s",textAlign:"right"});
-const SEL   = (w) => ({background:BG2,border:"1px solid "+BDR,borderRadius:3,color:TXT,padding:"7px 10px",fontSize:13,fontFamily:"inherit",width:w||"100%",outline:"none",cursor:"pointer"});
+const TH   = {fontSize:10,fontWeight:700,color:"#444444",padding:"12px 10px",borderBottom:"1px solid #1a1a1a",textAlign:"left",whiteSpace:"nowrap",letterSpacing:"2px",textTransform:"uppercase",background:"transparent"};
+const TH_R = {fontSize:10,fontWeight:700,color:"#444444",padding:"12px 10px",borderBottom:"1px solid #1a1a1a",textAlign:"right",whiteSpace:"nowrap",letterSpacing:"2px",textTransform:"uppercase",background:"transparent"};
+const TD   = {padding:"10px 10px",borderBottom:"1px solid #1a1a1a",verticalAlign:"middle"};
+const TD_R = {padding:"10px 10px",borderBottom:"1px solid #1a1a1a",verticalAlign:"middle",textAlign:"right"};
+const INP   = (w) => ({background:"#111111",border:"1px solid #1a1a1a",borderRadius:3,color:"#ffffff",padding:"7px 10px",fontSize:13,fontFamily:"inherit",width:w||"100%",outline:"none"});
+const INP_R = (w) => ({background:"#111111",border:"1px solid #1a1a1a",borderRadius:3,color:"#ffffff",padding:"7px 10px",fontSize:13,fontFamily:"inherit",width:w||"100%",outline:"none",textAlign:"right"});
+const SEL   = (w) => ({background:"#111111",border:"1px solid #1a1a1a",borderRadius:3,color:"#ffffff",padding:"7px 10px",fontSize:13,fontFamily:"inherit",width:w||"100%",outline:"none",cursor:"pointer"});
 
 // ── STRUCTURAL TAKEOFF ─────────────────────────────────────────────────────────
 function newStructRow(cf="") {
@@ -206,13 +193,13 @@ function StructuralTakeoff({ rows, setRows, defaultCf }) {
                 <tr key={r.id} style={{background:"transparent"}}>
                   <td style={TD}>
                     <input value={r.shape} onChange={e=>upd(r.id,"shape",e.target.value.toUpperCase())}
-                      placeholder="W12X53" style={{...INP("100%"),fontWeight:600,color:TXT}}/>
+                      placeholder="W12X53" style={{...INP("100%"),fontWeight:600,color:"#ffffff"}}/>
                     <input value={r.note||""} onChange={e=>upd(r.id,"note",e.target.value)}
-                      placeholder="note (optional)" style={{background:"none",border:"none",color:TXT3,fontSize:11,fontFamily:"inherit",width:"100%",marginTop:2,outline:"none",padding:"0 2px"}}/>
+                      placeholder="note" style={{background:"none",border:"none",color:"#444444",fontSize:11,fontFamily:"inherit",width:"100%",marginTop:3,outline:"none",padding:"0 2px"}}/>
                   </td>
                   <td style={TD}>
                     <input type="number" value={r.weightPerFt} onChange={e=>upd(r.id,"weightPerFt",e.target.value)}
-                      placeholder="auto" style={{...INP_R("100%"),color:r.autoWt?TXT3:TXT}}/>
+                      placeholder="auto" style={{...INP_R("100%"),color:r.autoWt?"#444444":"#ffffff"}}/>
                   </td>
                   <td style={TD}>
                     <input type="number" value={r.qty} onChange={e=>upd(r.id,"qty",e.target.value)}
@@ -222,21 +209,21 @@ function StructuralTakeoff({ rows, setRows, defaultCf }) {
                     <input type="number" value={r.length} onChange={e=>upd(r.id,"length",e.target.value)}
                       placeholder="ft" style={{...INP_R("100%")}}/>
                   </td>
-                  <td style={{...TD_R,color:lbs>0?TXT:"#333",fontWeight:600,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
+                  <td style={{...TD_R,color:lbs>0?"#cccccc":"#222222",fontWeight:600,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
                     {lbs>0 ? Math.round(lbs).toLocaleString() : "—"}
                   </td>
-                  <td style={{...TD_R,color:lbs>0?ACC:"#333",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
+                  <td style={{...TD_R,color:lbs>0?"#e85c26":"#222222",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
                     {lbs>0 ? (lbs/2000).toFixed(3) : "—"}
                   </td>
                   <td style={TD}>
                     <input type="number" value={r.costFactor} onChange={e=>upd(r.id,"costFactor",e.target.value)}
                       placeholder="$/lb" style={{...INP_R("100%")}}/>
                   </td>
-                  <td style={{...TD_R,color:cost>0?TXT:"#333",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
+                  <td style={{...TD_R,color:cost>0?"#ffffff":"#222222",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
                     {cost>0 ? "$"+Math.round(cost).toLocaleString() : "—"}
                   </td>
                   <td style={TD}>
-                    <button onClick={()=>del(r.id)} style={{background:"none",border:"none",color:TXT3,cursor:"pointer",fontSize:16,padding:"0 4px",lineHeight:1}}>×</button>
+                    <button onClick={()=>del(r.id)} style={{background:"none",border:"none",color:"#333333",cursor:"pointer",fontSize:16,padding:"0 4px",lineHeight:1}}>×</button>
                   </td>
                 </tr>
               );
@@ -244,20 +231,20 @@ function StructuralTakeoff({ rows, setRows, defaultCf }) {
           </tbody>
           {totLbs > 0 && (
             <tfoot>
-              <tr style={{background:BG,borderTop:"1px solid "+BDR3}}>
-                <td colSpan={4} style={{padding:"10px",color:TXT3,fontSize:12}}>Totals</td>
-                <td style={{...TD,textAlign:"right",color:TXT,fontWeight:700}}>{Math.round(totLbs).toLocaleString()} lb</td>
-                <td style={{...TD,textAlign:"right",color:ACC,fontWeight:700}}>{(totLbs/2000).toFixed(2)} T</td>
+              <tr style={{background:"#0a0a0a",borderTop:"1px solid #333333"}}>
+                <td colSpan={4} style={{...TD,color:"#6b7280",fontSize:12}}>Totals</td>
+                <td style={{...TD,textAlign:"right",color:"#edf0f4",fontWeight:700}}>{Math.round(totLbs).toLocaleString()} lb</td>
+                <td style={{...TD,textAlign:"right",color:"#e85c26",fontWeight:700}}>{(totLbs/2000).toFixed(2)} T</td>
                 <td></td>
-                <td style={{...TD,textAlign:"right",color:ACC,fontWeight:700,fontSize:14}}>${Math.round(totCost).toLocaleString()}</td>
+                <td style={{...TD,textAlign:"right",color:"#e85c26",fontWeight:700,fontSize:14}}>${Math.round(totCost).toLocaleString()}</td>
                 <td></td>
               </tr>
             </tfoot>
           )}
         </table>
       </div>
-      <button onClick={add} style={{marginTop:12,padding:"10px 22px",border:"1px solid "+BDR,borderRadius:4,
-        background:"none",color:TXT3,cursor:"pointer",fontSize:11,fontFamily:"inherit",fontWeight:700,
+      <button onClick={add} style={{marginTop:12,padding:"10px 22px",border:"1px solid #1a1a1a",borderRadius:4,
+        background:"none",color:"#444444",cursor:"pointer",fontSize:11,fontFamily:"inherit",fontWeight:700,
         letterSpacing:"2px",textTransform:"uppercase",transition:"all 0.15s"}}>
         + Add Row
       </button>
@@ -294,7 +281,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
       <div style={{overflowX:"auto"}}>
         <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
           <thead>
-            <tr style={{background:BG2}}>
+            <tr style={{background:"#13171f"}}>
               <th style={TH}>Type</th>
               <th style={TH}>Section / Description</th>
               <th style={{...TH,textAlign:"right"}}>Wt/Ft or Thickness</th>
@@ -329,7 +316,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
                       </select>
                     ) : (
                       <input type="number" value={r.weightPerFt} onChange={e=>upd(r.id,"weightPerFt",e.target.value)}
-                        placeholder="lb/ft" style={{...INP_R(70), color: r.autoWt ? TXT3 : TXT}}/>
+                        placeholder="lb/ft" style={{...INP_R(70), color: r.autoWt ? "#6b7280" : "#edf0f4"}}/>
                     )}
                   </td>
                   <td style={{...TD,textAlign:"center"}}>
@@ -337,10 +324,10 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
                       <div style={{display:"flex",gap:4,alignItems:"center",justifyContent:"center"}}>
                         <input type="number" value={r.widthFt} onChange={e=>upd(r.id,"widthFt",e.target.value)}
                           placeholder="W'" style={{...INP_R(46),fontSize:12}}/>
-                        <span style={{color:TXT3}}>×</span>
+                        <span style={{color:"#4b5563"}}>×</span>
                         <input type="number" value={r.lengthFt} onChange={e=>upd(r.id,"lengthFt",e.target.value)}
                           placeholder="L'" style={{...INP_R(46),fontSize:12}}/>
-                        <span style={{color:TXT3}}>×</span>
+                        <span style={{color:"#4b5563"}}>×</span>
                         <input type="number" value={r.qty} onChange={e=>upd(r.id,"qty",e.target.value)}
                           placeholder="qty" style={{...INP_R(40),fontSize:12}}/>
                       </div>
@@ -348,27 +335,27 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
                       <div style={{display:"flex",gap:4,alignItems:"center",justifyContent:"center"}}>
                         <input type="number" value={r.qty} onChange={e=>upd(r.id,"qty",e.target.value)}
                           placeholder="qty" style={{...INP_R(46),fontSize:12}}/>
-                        <span style={{color:TXT3}}>×</span>
+                        <span style={{color:"#4b5563"}}>×</span>
                         <input type="number" value={r.length} onChange={e=>upd(r.id,"length",e.target.value)}
                           placeholder="ft" style={{...INP_R(55),fontSize:12}}/>
                       </div>
                     )}
                   </td>
-                  <td style={{...TD_R,color:lbs>0?TXT:"#333",fontWeight:600,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
+                  <td style={{...TD_R,color:lbs>0?"#cccccc":"#222222",fontWeight:600,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
                     {lbs>0 ? Math.round(lbs).toLocaleString() : "—"}
                   </td>
-                  <td style={{...TD_R,color:lbs>0?BLUE:"#374151",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
+                  <td style={{...TD_R,color:lbs>0?"#3b82f6":"#374151",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
                     {lbs>0 ? (lbs/2000).toFixed(3) : "—"}
                   </td>
                   <td style={TD}>
                     <input type="number" value={r.costFactor} onChange={e=>upd(r.id,"costFactor",e.target.value)}
                       placeholder="$/lb" style={{...INP_R("100%")}}/>
                   </td>
-                  <td style={{...TD_R,color:cost>0?TXT:"#333",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
+                  <td style={{...TD_R,color:cost>0?"#ffffff":"#222222",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",fontSize:14}}>
                     {cost>0 ? "$"+Math.round(cost).toLocaleString() : "—"}
                   </td>
                   <td style={TD}>
-                    <button onClick={()=>del(r.id)} style={{background:"none",border:"none",color:TXT3,cursor:"pointer",fontSize:16,padding:"0 4px",lineHeight:1}}>×</button>
+                    <button onClick={()=>del(r.id)} style={{background:"none",border:"none",color:"#333333",cursor:"pointer",fontSize:16,padding:"0 4px",lineHeight:1}}>×</button>
                   </td>
                 </tr>
               );
@@ -376,12 +363,12 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
           </tbody>
           {totLbs > 0 && (
             <tfoot>
-              <tr style={{background:BG,borderTop:"1px solid "+BDR3}}>
-                <td colSpan={4} style={{padding:"10px",color:TXT3,fontSize:12}}>Totals</td>
-                <td style={{...TD,textAlign:"right",color:TXT,fontWeight:700}}>{Math.round(totLbs).toLocaleString()} lb</td>
-                <td style={{...TD,textAlign:"right",color:BLUE,fontWeight:700}}>{(totLbs/2000).toFixed(2)} T</td>
+              <tr style={{background:"#0a0a0a",borderTop:"1px solid #333333"}}>
+                <td colSpan={4} style={{...TD,color:"#6b7280",fontSize:12}}>Totals</td>
+                <td style={{...TD,textAlign:"right",color:"#edf0f4",fontWeight:700}}>{Math.round(totLbs).toLocaleString()} lb</td>
+                <td style={{...TD,textAlign:"right",color:"#3b82f6",fontWeight:700}}>{(totLbs/2000).toFixed(2)} T</td>
                 <td></td>
-                <td style={{...TD,textAlign:"right",color:BLUE,fontWeight:700,fontSize:14}}>${Math.round(totCost).toLocaleString()}</td>
+                <td style={{...TD,textAlign:"right",color:"#3b82f6",fontWeight:700,fontSize:14}}>${Math.round(totCost).toLocaleString()}</td>
                 <td></td>
               </tr>
             </tfoot>
@@ -389,7 +376,7 @@ function MiscTakeoff({ rows, setRows, defaultCf }) {
         </table>
       </div>
       <button onClick={add} style={{marginTop:10,padding:"8px 18px",border:"2px dashed #2d3340",borderRadius:6,
-        background:"none",color:TXT3,cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>
+        background:"none",color:"#6b7280",cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>
         + Add Row
       </button>
     </div>
@@ -505,13 +492,13 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
 
   return (
     <div>
-      <div style={{marginBottom:20}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:TXT,letterSpacing:"1px",marginBottom:4}}>Price Lists</div><div style={{fontSize:12,color:TXT3}}>Manage all vendor pricing. Upload CSV to replace a supplier's list instantly, or edit inline.</div></div>
+      <SH title="Price Lists" sub="Manage all vendor pricing. Upload CSV to replace a supplier's list instantly, or edit inline."/>
       <div style={{display:"flex",gap:0,marginBottom:24,borderBottom:"1px solid #1e2532"}}>
         {SUB.map(s => (
           <button key={s.id} onClick={()=>setSection(s.id)} style={{
             background:"none",border:"none",cursor:"pointer",padding:"8px 18px",
             fontSize:10,letterSpacing:2,textTransform:"uppercase",
-            color:section===s.id?"#10b981":TXT3,
+            color:section===s.id?"#10b981":"#6b7280",
             borderBottom:section===s.id?"2px solid #10b981":"2px solid transparent",
             fontFamily:"inherit",marginBottom:-1,
           }}>{s.label}</button>
@@ -550,7 +537,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
           <div style={{overflowX:"auto"}}>
             <table>
               <thead>
-                <tr style={{color:TXT3,fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
+                <tr style={{color:"#6b7280",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
                   {["Section","Description","$/Lb",""].map(h=>(
                     <th key={h} style={{textAlign:"left",padding:"8px 10px",borderBottom:"1px solid #1e2532"}}>{h}</th>
                   ))}
@@ -567,13 +554,13 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
                     </td>
                     <td style={{padding:"6px 10px"}}>
                       <div style={{display:"flex",alignItems:"center",gap:4}}>
-                        <span style={{color:TXT3,fontSize:12}}>$</span>
+                        <span style={{color:"#6b7280",fontSize:12}}>$</span>
                         <input type="number" value={row.ppl} onChange={e=>setSuppliers(s=>({...s,[activeSup]:s[activeSup].map((r,j)=>j===i?{...r,ppl:+e.target.value}:r)}))} style={{...ci(80),textAlign:"right"}}/>
-                        <span style={{color:TXT3,fontSize:11}}>/lb</span>
+                        <span style={{color:"#6b7280",fontSize:11}}>/lb</span>
                       </div>
                     </td>
                     <td style={{padding:"6px 10px"}}>
-                      <button onClick={()=>setSuppliers(s=>({...s,[activeSup]:s[activeSup].filter((_,j)=>j!==i)}))} style={{background:"none",border:"none",color:TXT3,cursor:"pointer",fontSize:16}}>×</button>
+                      <button onClick={()=>setSuppliers(s=>({...s,[activeSup]:s[activeSup].filter((_,j)=>j!==i)}))} style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:16}}>×</button>
                     </td>
                   </tr>
                 ))}
@@ -595,7 +582,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
           <div style={{overflowX:"auto",marginBottom:14}}>
             <table>
               <thead>
-                <tr style={{color:TXT3,fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
+                <tr style={{color:"#6b7280",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
                   {["Company","$/Ton","Mob ($)","PW Adder/T","AISC","In-House","Notes",""].map(h=>(
                     <th key={h} style={{textAlign:"left",padding:"8px 10px",borderBottom:"1px solid #1e2532",whiteSpace:"nowrap"}}>{h}</th>
                   ))}
@@ -612,7 +599,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
                     <td style={{padding:"6px 10px"}}><Toggle value={row.inHouse} onChange={v=>setErectorList(r=>r.map((x,j)=>j===i?{...x,inHouse:v}:x))}/></td>
                     <td style={{padding:"6px 10px"}}><input value={row.notes} onChange={e=>setErectorList(r=>r.map((x,j)=>j===i?{...x,notes:e.target.value}:x))} style={ci(200)}/></td>
                     <td style={{padding:"6px 10px"}}>
-                      <button onClick={()=>setErectorList(r=>r.filter((_,j)=>j!==i))} style={{background:"none",border:"none",color:TXT3,cursor:"pointer",fontSize:16}}>×</button>
+                      <button onClick={()=>setErectorList(r=>r.filter((_,j)=>j!==i))} style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:16}}>×</button>
                     </td>
                   </tr>
                 ))}
@@ -630,7 +617,7 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
           <div style={{overflowX:"auto",marginBottom:14}}>
             <table>
               <thead>
-                <tr style={{color:TXT3,fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
+                <tr style={{color:"#6b7280",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
                   {["Company","$/Lb","Lead Days","Notes",""].map(h=>(
                     <th key={h} style={{textAlign:"left",padding:"8px 10px",borderBottom:"1px solid #1e2532"}}>{h}</th>
                   ))}
@@ -642,15 +629,15 @@ function PriceListsTab({ suppliers, setSuppliers, erectorList, setErectorList, g
                     <td style={{padding:"6px 10px"}}><input value={row.name} onChange={e=>setGalvanizers(r=>r.map((x,j)=>j===i?{...x,name:e.target.value}:x))} style={ci(180)}/></td>
                     <td style={{padding:"6px 10px"}}>
                       <div style={{display:"flex",alignItems:"center",gap:4}}>
-                        <span style={{color:TXT3,fontSize:12}}>$</span>
+                        <span style={{color:"#6b7280",fontSize:12}}>$</span>
                         <input type="number" value={row.pplb} onChange={e=>setGalvanizers(r=>r.map((x,j)=>j===i?{...x,pplb:+e.target.value}:x))} style={{...ci(70),textAlign:"right"}}/>
-                        <span style={{fontSize:10,color:TXT3}}>/lb</span>
+                        <span style={{fontSize:10,color:"#6b7280"}}>/lb</span>
                       </div>
                     </td>
                     <td style={{padding:"6px 10px"}}><input type="number" value={row.leadDays} onChange={e=>setGalvanizers(r=>r.map((x,j)=>j===i?{...x,leadDays:+e.target.value}:x))} style={ci(60)}/></td>
                     <td style={{padding:"6px 10px"}}><input value={row.notes} onChange={e=>setGalvanizers(r=>r.map((x,j)=>j===i?{...x,notes:e.target.value}:x))} style={ci(260)}/></td>
                     <td style={{padding:"6px 10px"}}>
-                      <button onClick={()=>setGalvanizers(r=>r.filter((_,j)=>j!==i))} style={{background:"none",border:"none",color:TXT3,cursor:"pointer",fontSize:16}}>×</button>
+                      <button onClick={()=>setGalvanizers(r=>r.filter((_,j)=>j!==i))} style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:16}}>×</button>
                     </td>
                   </tr>
                 ))}
@@ -834,62 +821,62 @@ export default function App() {
   ];
 
   return (
-    <div style={{fontFamily:"'Inter','Barlow',sans-serif",background:BG,minHeight:"100vh",color:TXT2,fontSize:14}}>
+    <div style={{fontFamily:"'Inter','Barlow',sans-serif",background:"#0a0a0a",minHeight:"100vh",color:"#888888",fontSize:14}}>
 
       {/* HEADER */}
-      <div style={{background:BG2,borderBottom:"2px solid #e85c26",padding:"14px 28px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
+      <div style={{background:"#111111",borderBottom:"1px solid #333333",padding:"16px 32px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16}}>
         <div>
-          <div style={{fontSize:10,color:ACC,letterSpacing:3,textTransform:"uppercase",marginBottom:4}}>SteelQuote Pro</div>
-          <div style={{fontSize:18,color:TXT,fontWeight:700}}>Fabrication Estimating System</div>
+          <div style={{fontSize:10,color:"#e85c26",letterSpacing:3,textTransform:"uppercase",marginBottom:4}}>SteelQuote Pro</div>
+          <div style={{fontSize:18,color:"#edf0f4",fontWeight:700}}>Fabrication Estimating System</div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
           {isPW && <Badge color="#7c3aed" text="PREVAILING WAGE"/>}
           {requiresAISC && <Badge color="#f59e0b" text="AISC REQUIRED"/>}
-          <button onClick={doPrint} style={{background:ACC,border:"none",borderRadius:6,color:"white",padding:"9px 18px",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>
+          <button onClick={doPrint} style={{background:"transparent",border:"1px solid #e85c26",borderRadius:4,color:"#e85c26",padding:"8px 18px",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,letterSpacing:"1.5px",textTransform:"uppercase"}}>
             ⎙ Print / Download
           </button>
           <div style={{textAlign:"right"}}>
-            <div style={{fontSize:10,color:TXT3,marginBottom:3}}>Job #</div>
+            <div style={{fontSize:9,color:"#444444",letterSpacing:"2px",textTransform:"uppercase",marginBottom:4,fontWeight:700}}>Job #</div>
             <input value={jobNum} onChange={e=>setJobNum(e.target.value)}
-              style={{background:"transparent",border:"1px solid #2d3340",borderRadius:4,color:ACC,padding:"4px 10px",fontSize:14,fontWeight:700,width:90,fontFamily:"inherit",textAlign:"right"}}/>
+              style={{background:"transparent",border:"none",borderBottom:"1px solid #333333",color:"#e85c26",padding:"4px 0",fontSize:16,fontWeight:700,width:90,fontFamily:"inherit",textAlign:"right",outline:"none"}}/>
           </div>
           <div style={{textAlign:"right"}}>
-            <div style={{fontSize:10,color:TXT3,marginBottom:3}}>Job Name</div>
+            <div style={{fontSize:9,color:"#444444",letterSpacing:"2px",textTransform:"uppercase",marginBottom:4,fontWeight:700}}>Job Name</div>
             <input value={jobName} onChange={e=>setJobName(e.target.value)}
-              style={{background:"transparent",border:"1px solid #2d3340",borderRadius:4,color:TXT,padding:"4px 10px",fontSize:13,width:220,fontFamily:"inherit",textAlign:"right"}}/>
+              style={{background:"transparent",border:"none",borderBottom:"1px solid #333333",color:"#ffffff",padding:"4px 0",fontSize:13,width:220,fontFamily:"inherit",textAlign:"right",outline:"none"}}/>
           </div>
         </div>
       </div>
 
       {/* SUMMARY BAR */}
-      <div style={{background:BG,borderBottom:"1px solid "+BDR,padding:"12px 32px",display:"flex",gap:28,alignItems:"center",flexWrap:"wrap"}}>
+      <div style={{background:"#0a0a0a",borderBottom:"1px solid #1a1a1a",padding:"12px 32px",display:"flex",gap:28,alignItems:"center",flexWrap:"wrap"}}>
         {WORK_TYPES.map(({id,label,color}) => (
           <div key={id}>
             <div style={{fontSize:9,color,letterSpacing:"2px",textTransform:"uppercase",marginBottom:3,fontWeight:700}}>{label}</div>
-            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,color:TXT,fontWeight:700}}>{fmtN(est.tonsByType[id],2)} T</div>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,color:"#ffffff",fontWeight:700}}>{fmtN(est.tonsByType[id],2)} T</div>
           </div>
         ))}
-        <div style={{width:1,height:32,background:BDR}}/>
+        <div style={{width:1,height:32,background:"#1a1a1a"}}/>
         {[["Material",fmt(est.matCost)],["Labor",fmt(est.totalLabor)],["Burden",fmt(est.totalBurden)],["Erection",fmt(est.totalErection)]].map(([l,v]) => (
           <div key={l}>
-            <div style={{fontSize:9,color:TXT3,letterSpacing:"2px",textTransform:"uppercase",marginBottom:3,fontWeight:700}}>{l}</div>
-            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,color:TXT,fontWeight:700}}>{v}</div>
+            <div style={{fontSize:9,color:"#444444",letterSpacing:"2px",textTransform:"uppercase",marginBottom:3,fontWeight:700}}>{l}</div>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,color:"#ffffff",fontWeight:700}}>{v}</div>
           </div>
         ))}
         <div style={{marginLeft:"auto",textAlign:"right"}}>
-          <div style={{fontSize:9,color:ACC,letterSpacing:"2px",textTransform:"uppercase",marginBottom:3,fontWeight:700}}>Total Quote</div>
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:32,color:TXT,fontWeight:800}}>{fmt(est.total)}</div>
+          <div style={{fontSize:9,color:"#e85c26",letterSpacing:"2px",textTransform:"uppercase",marginBottom:3,fontWeight:700}}>Total Quote</div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:32,color:"#ffffff",fontWeight:800}}>{fmt(est.total)}</div>
         </div>
       </div>
 
-            {/* MAIN TABS */}
-      <div style={{background:BG,borderBottom:"1px solid "+BDR,padding:"0 32px",display:"flex",overflowX:"auto"}}>
+      {/* MAIN TABS */}
+      <div style={{display:"flex",borderBottom:"1px solid #1e2532",padding:"0 28px",background:"#0e1117",overflowX:"auto"}}>
         {TABS.map(t => (
           <button key={t.id} onClick={()=>setTab(t.id)} style={{
             background:"none",border:"none",cursor:"pointer",padding:"12px 18px",
             fontSize:10,letterSpacing:"2.5px",textTransform:"uppercase",whiteSpace:"nowrap",fontWeight:700,
-            color:tab===t.id?TXT:TXT3,
-            borderBottom:tab===t.id?"2px solid "+ACC:"2px solid transparent",
+            color:tab===t.id?"#ffffff":"#444444",
+            borderBottom:tab===t.id?"2px solid #e85c26":"2px solid transparent",
             fontFamily:"inherit",marginBottom:-1,transition:"color 0.15s",
           }}>{t.label}</button>
         ))}
@@ -900,10 +887,7 @@ export default function App() {
         {/* TAKEOFF — two sub-tabs */}
         {tab === "takeoff" && (
           <div>
-            <div style={{marginBottom:20}}>
-              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:TXT,letterSpacing:"1px",marginBottom:4}}>Material Takeoff</div>
-              <div style={{fontSize:12,color:TXT3}}>Enter each section. Wt/Ft auto-fills from AISC. Upload a file to populate all rows at once.</div>
-            </div>
+            <div style={{marginBottom:20}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:"#ffffff",letterSpacing:"1px",marginBottom:4}}>Material Takeoff</div><div style={{fontSize:12,color:"#444444"}}>Enter each section. Wt/Ft auto-fills from AISC. Upload a file to populate all rows at once.</div></div>
 
             <FileUploadZone onImport={(sRows, mRows, mode) => {
               if (mode === "replace") { setStructRows(sRows.length?sRows:[newStructRow()]); setMiscRows(mRows.length?mRows:[newMiscRow()]); }
@@ -917,25 +901,24 @@ export default function App() {
             )}
 
                         {/* Sub-tab selector */}
-            <div style={{display:"flex",gap:0,marginBottom:24,border:"1px solid "+BDR,borderRadius:5,overflow:"hidden",width:"fit-content"}}>
+            <div style={{display:"flex",gap:0,marginBottom:24,border:"1px solid #1a1a1a",borderRadius:5,overflow:"hidden",width:"fit-content"}}>
               {[
-                {id:"structural", label:"Structural Steel", color:ACC, tons: fmtN(est.tonsByType.structural,2)+"T"},
-                {id:"misc",       label:"Misc Metals",      color:BLUE, tons: fmtN((est.tonsByType.misc||0)+(est.tonsByType.stainless||0),2)+"T"},
+                {id:"structural", label:"Structural Steel", color:"#e85c26", tons: fmtN(est.tonsByType.structural,2)+"T"},
+                {id:"misc",       label:"Misc Metals",      color:"#60a5fa", tons: fmtN((est.tonsByType.misc||0)+(est.tonsByType.stainless||0),2)+"T"},
               ].map((s,i)=>(
                 <button key={s.id} onClick={()=>setTakeoffTab(s.id)} style={{
                   background: takeoffTab===s.id ? s.color : "transparent",
                   border:"none",
-                  borderRight: i===0 ? "1px solid "+BDR : "none",
+                  borderRight: i===0 ? "1px solid #1a1a1a" : "none",
                   cursor:"pointer",padding:"10px 24px",
                   fontSize:11,letterSpacing:"2px",textTransform:"uppercase",fontWeight:700,
-                  color: takeoffTab===s.id ? "#fff" : TXT3,
+                  color: takeoffTab===s.id ? "#ffffff" : "#444444",
                   fontFamily:"inherit",transition:"all 0.15s",
                 }}>
                   {s.label}&nbsp;&nbsp;<span style={{fontSize:10,fontWeight:400,opacity:0.7}}>{s.tons}</span>
                 </button>
               ))}
             </div>
-            
             {takeoffTab === "structural" && (
               <StructuralTakeoff rows={structRows} setRows={setStructRows} defaultCf={defaultCf}/>
             )}
@@ -948,7 +931,7 @@ export default function App() {
         {/* MATERIALS */}
         {tab === "materials" && (
           <div>
-            <div style={{marginBottom:20}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:TXT,letterSpacing:"1px",marginBottom:4}}>Material Costs</div><div style={{fontSize:12,color:TXT3}}>Material cost is driven by $/lb set on each takeoff row. Select supplier to set your default rate.</div></div>
+            <SH title="Material Costs" sub="Material cost is driven by $/lb set on each takeoff row. Select supplier to set your default rate."/>
             <div style={{display:"flex",gap:20,marginBottom:20,alignItems:"flex-end",flexWrap:"wrap"}}>
               <div>
                 <Lbl>Active Supplier (sets default $/lb on new rows)</Lbl>
@@ -960,7 +943,7 @@ export default function App() {
                 <Lbl>Sales Tax (%)</Lbl>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginTop:6}}>
                   <input type="number" value={taxPct} onChange={e=>setTaxPct(+e.target.value)} style={ci(60)}/>
-                  <span style={{fontSize:11,color:TXT3}}>= {fmt(est.taxCost)}</span>
+                  <span style={{fontSize:11,color:"#6b7280"}}>= {fmt(est.taxCost)}</span>
                 </div>
               </div>
             </div>
@@ -968,10 +951,10 @@ export default function App() {
             {/* Structural rows */}
             {structRows.some(r=>rowTotalLbs(r)>0) && (
               <div style={{marginBottom:20}}>
-                <div style={{fontSize:9,color:ACC,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Structural Steel</div>
+                <div style={{fontSize:9,color:"#e85c26",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Structural Steel</div>
                 <table>
                   <thead>
-                    <tr style={{color:TXT3,fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
+                    <tr style={{color:"#6b7280",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
                       {["Shape","Total Lbs","Tons","$/lb","Cost"].map(h=>(
                         <th key={h} style={{textAlign:"left",padding:"8px 10px",borderBottom:"1px solid #1e2532"}}>{h}</th>
                       ))}
@@ -982,11 +965,11 @@ export default function App() {
                       const lbs=rowTotalLbs(r), cf=parseFloat(r.costFactor)||0, cost=(cf*lbs)/100;
                       return (
                         <tr key={r.id} style={{background:"transparent"}}>
-                          <td style={{padding:"7px 10px",color:TXT,fontWeight:600}}>{r.shape||"—"}</td>
+                          <td style={{padding:"7px 10px",color:"#edf0f4",fontWeight:600}}>{r.shape||"—"}</td>
                           <td style={{padding:"7px 10px"}}>{Math.round(lbs).toLocaleString()}</td>
                           <td style={{padding:"7px 10px"}}>{fmtN(lbs/2000,3)} T</td>
-                          <td style={{padding:"7px 10px",color:cf?TXT2:"#ef4444"}}>{cf?"$"+cf:"NOT SET"}</td>
-                          <td style={{padding:"7px 10px",color:ACC,fontWeight:600}}>{fmt(cost)}</td>
+                          <td style={{padding:"7px 10px",color:cf?"#c8cdd6":"#ef4444"}}>{cf?"$"+cf:"NOT SET"}</td>
+                          <td style={{padding:"7px 10px",color:"#e85c26",fontWeight:600}}>{fmt(cost)}</td>
                         </tr>
                       );
                     })}
@@ -998,10 +981,10 @@ export default function App() {
             {/* Misc rows */}
             {miscRows.some(r=>rowTotalLbs(r)>0) && (
               <div style={{marginBottom:20}}>
-                <div style={{fontSize:9,color:BLUE,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Misc Metals</div>
+                <div style={{fontSize:9,color:"#3b82f6",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Misc Metals</div>
                 <table>
                   <thead>
-                    <tr style={{color:TXT3,fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
+                    <tr style={{color:"#6b7280",fontSize:9,letterSpacing:1.5,textTransform:"uppercase"}}>
                       {["Type","Shape/Desc","Total Lbs","Tons","$/lb","Cost"].map(h=>(
                         <th key={h} style={{textAlign:"left",padding:"8px 10px",borderBottom:"1px solid #1e2532"}}>{h}</th>
                       ))}
@@ -1012,12 +995,12 @@ export default function App() {
                       const lbs=rowTotalLbs(r), cf=parseFloat(r.costFactor)||0, cost=(cf*lbs)/100;
                       return (
                         <tr key={r.id} style={{background:"transparent"}}>
-                          <td style={{padding:"7px 10px",fontSize:9,color:BLUE,textTransform:"uppercase"}}>{r.itemType}</td>
-                          <td style={{padding:"7px 10px",color:TXT,fontWeight:600}}>{r.shape||"—"}</td>
+                          <td style={{padding:"7px 10px",fontSize:9,color:"#3b82f6",textTransform:"uppercase"}}>{r.itemType}</td>
+                          <td style={{padding:"7px 10px",color:"#edf0f4",fontWeight:600}}>{r.shape||"—"}</td>
                           <td style={{padding:"7px 10px"}}>{Math.round(lbs).toLocaleString()}</td>
                           <td style={{padding:"7px 10px"}}>{fmtN(lbs/2000,3)} T</td>
-                          <td style={{padding:"7px 10px",color:cf?TXT2:"#ef4444"}}>{cf?"$"+cf:"NOT SET"}</td>
-                          <td style={{padding:"7px 10px",color:BLUE,fontWeight:600}}>{fmt(cost)}</td>
+                          <td style={{padding:"7px 10px",color:cf?"#c8cdd6":"#ef4444"}}>{cf?"$"+cf:"NOT SET"}</td>
+                          <td style={{padding:"7px 10px",color:"#3b82f6",fontWeight:600}}>{fmt(cost)}</td>
                         </tr>
                       );
                     })}
@@ -1026,7 +1009,7 @@ export default function App() {
               </div>
             )}
 
-            <div style={{background:BG2,border:"1px solid #1e2532",borderRadius:8,padding:16,maxWidth:360}}>
+            <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:8,padding:16,maxWidth:360}}>
               <R label="Structural Material" value={fmt(est.allRows.filter(r=>r.displayType==="structural").reduce((a,r)=>a+r.cost,0))}/>
               <R label="Misc Metals Material" value={fmt(est.allRows.filter(r=>r.displayType==="misc").reduce((a,r)=>a+r.cost,0))}/>
               {est.allRows.some(r=>r.displayType==="stainless") && <R label="Stainless Material" value={fmt(est.allRows.filter(r=>r.displayType==="stainless").reduce((a,r)=>a+r.cost,0))}/>}
@@ -1039,27 +1022,27 @@ export default function App() {
         {/* LABOR */}
         {tab === "labor" && (
           <div>
-            <div style={{marginBottom:20}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:TXT,letterSpacing:"1px",marginBottom:4}}>Labor & Shop Burden</div><div style={{fontSize:12,color:TXT3}}>Shop labor rates are always your base rates. Prevailing wage does not apply to shop workers — only to field erectors.</div></div>
-            <div style={{background:BG2,border:"1px solid #1e2532",borderRadius:10,padding:20,maxWidth:640,marginBottom:24}}>
-              <div style={{fontSize:10,color:ACC,letterSpacing:2,textTransform:"uppercase",marginBottom:16}}>Shop Burden Rate Calculator</div>
+            <SH title="Labor & Shop Burden" sub="Shop labor rates are always your base rates. Prevailing wage does not apply to shop workers — only to field erectors."/>
+            <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:10,padding:20,maxWidth:640,marginBottom:24}}>
+              <div style={{fontSize:10,color:"#e85c26",letterSpacing:2,textTransform:"uppercase",marginBottom:16}}>Shop Burden Rate Calculator</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16}}>
                 <div>
                   <Lbl>Monthly Overhead ($)</Lbl>
                   <div style={{display:"flex",alignItems:"center",gap:6,marginTop:6}}>
-                    <span style={{color:TXT3}}>$</span>
+                    <span style={{color:"#6b7280"}}>$</span>
                     <input type="number" value={monthlyOvhd} onChange={e=>setMonthlyOvhd(+e.target.value)} style={{...ci(110),fontSize:14,fontWeight:700}}/>
                   </div>
-                  <div style={{fontSize:9,color:TXT3,marginTop:4}}>Rent, utilities, gas, insurance, vehicles, equipment</div>
+                  <div style={{fontSize:9,color:"#4b5563",marginTop:4}}>Rent, utilities, gas, insurance, vehicles, equipment</div>
                 </div>
                 <div>
                   <Lbl>Monthly Billable Hours</Lbl>
                   <input type="number" value={monthlyHrs} onChange={e=>setMonthlyHrs(+e.target.value)} style={{...ci(110),fontSize:14,fontWeight:700,marginTop:6,display:"block"}}/>
-                  <div style={{fontSize:9,color:TXT3,marginTop:4}}>8 workers × 173 hrs ≈ 1,384/mo</div>
+                  <div style={{fontSize:9,color:"#4b5563",marginTop:4}}>8 workers × 173 hrs ≈ 1,384/mo</div>
                 </div>
-                <div style={{background:BG,borderRadius:8,padding:14,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",border:"1px solid #e85c2633"}}>
-                  <div style={{fontSize:9,color:ACC,letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>Burden Rate</div>
-                  <div style={{fontSize:28,color:ACC,fontWeight:800}}>${fmtN(burdenRate,2)}</div>
-                  <div style={{fontSize:10,color:TXT3}}>per shop hour</div>
+                <div style={{background:"#0e1117",borderRadius:8,padding:14,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",border:"1px solid #e85c2633"}}>
+                  <div style={{fontSize:9,color:"#e85c26",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>Burden Rate</div>
+                  <div style={{fontSize:28,color:"#e85c26",fontWeight:800}}>${fmtN(burdenRate,2)}</div>
+                  <div style={{fontSize:10,color:"#6b7280"}}>per shop hour</div>
                 </div>
               </div>
             </div>
@@ -1067,7 +1050,7 @@ export default function App() {
               {WORK_TYPES.map(({id,label,color}) => {
                 const lb = est.laborByType[id] || {};
                 return (
-                  <div key={id} style={{background:BG2,border:`1px solid ${color}33`,borderRadius:10,padding:18}}>
+                  <div key={id} style={{background:"#13171f",border:`1px solid ${color}33`,borderRadius:10,padding:18}}>
                     <div style={{fontSize:10,color,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>{label}</div>
                     <div style={{marginBottom:12}}>
                       <Lbl>Labor Rate ($/hr)</Lbl>
@@ -1088,7 +1071,7 @@ export default function App() {
                 );
               })}
             </div>
-            <div style={{background:BG2,border:"1px solid #1e2532",borderRadius:8,padding:18,maxWidth:440}}>
+            <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:8,padding:18,maxWidth:440}}>
               <R label="Total Direct Labor" value={fmt(est.totalLabor)}/>
               <R label="Total Shop Burden" value={fmt(est.totalBurden)}/>
               <R label="Combined Shop Cost" value={fmt(est.totalLabor+est.totalBurden)} hi/>
@@ -1102,13 +1085,13 @@ export default function App() {
         {/* ERECTION */}
         {tab === "erection" && (
           <div>
-            <div style={{marginBottom:20}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:TXT,letterSpacing:"1px",marginBottom:4}}>Erection</div><div style={{fontSize:12,color:TXT3}}>Add one erector per scope. Prevailing wage adder applies here — erectors are field labor.</div></div>
-            <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:24,background:BG2,border:"1px solid #1e2532",borderRadius:8,padding:16,maxWidth:560,flexWrap:"wrap"}}>
+            <SH title="Erection" sub="Add one erector per scope. Prevailing wage adder applies here — erectors are field labor."/>
+            <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:24,background:"#13171f",border:"1px solid #1e2532",borderRadius:8,padding:16,maxWidth:560,flexWrap:"wrap"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <Toggle value={requiresAISC} onChange={setRequiresAISC}/>
                 <div>
-                  <div style={{fontSize:12,color:requiresAISC?"#f59e0b":TXT3,fontWeight:600}}>AISC Certified Erectors Required</div>
-                  <div style={{fontSize:10,color:TXT3,marginTop:2}}>When on, only AISC-certified crews appear in dropdowns</div>
+                  <div style={{fontSize:12,color:requiresAISC?"#f59e0b":"#6b7280",fontWeight:600}}>AISC Certified Erectors Required</div>
+                  <div style={{fontSize:10,color:"#4b5563",marginTop:2}}>When on, only AISC-certified crews appear in dropdowns</div>
                 </div>
               </div>
               {requiresAISC && <div style={{marginLeft:"auto",fontSize:10,color:"#f59e0b"}}>{availableErectors.length} AISC crew{availableErectors.length!==1?"s":""} available</div>}
@@ -1117,7 +1100,7 @@ export default function App() {
               {est.erectDetail.map((je) => {
                 const master = je.master;
                 return (
-                  <div key={je.id} style={{background:BG2,border:"1px solid #1e2532",borderRadius:10,padding:20}}>
+                  <div key={je.id} style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:10,padding:20}}>
                     <div style={{display:"flex",gap:16,alignItems:"flex-start",flexWrap:"wrap"}}>
                       <div style={{flex:"0 0 200px"}}>
                         <Lbl>Erector</Lbl>
@@ -1143,14 +1126,14 @@ export default function App() {
                         <Lbl>Tons</Lbl>
                         <div style={{display:"flex",alignItems:"center",gap:8,marginTop:6}}>
                           <Toggle value={je.useManualTons} onChange={v=>setJobErectors(ers=>ers.map(x=>x.id===je.id?{...x,useManualTons:v}:x))}/>
-                          <span style={{fontSize:10,color:TXT3}}>{je.useManualTons?"Manual":"Auto from scope"}</span>
+                          <span style={{fontSize:10,color:"#6b7280"}}>{je.useManualTons?"Manual":"Auto from scope"}</span>
                         </div>
                         {je.useManualTons
                           ? <input type="number" value={je.manualTons} onChange={e=>setJobErectors(ers=>ers.map(x=>x.id===je.id?{...x,manualTons:+e.target.value}:x))} style={{...ci(90),marginTop:8,display:"block"}}/>
-                          : <div style={{fontSize:11,color:ACC,marginTop:6,fontWeight:600}}>{fmtN(je.tons,2)} T auto</div>
+                          : <div style={{fontSize:11,color:"#e85c26",marginTop:6,fontWeight:600}}>{fmtN(je.tons,2)} T auto</div>
                         }
                       </div>
-                      <div style={{flex:1,minWidth:160,background:BG,borderRadius:8,padding:14}}>
+                      <div style={{flex:1,minWidth:160,background:"#0e1117",borderRadius:8,padding:14}}>
                         {master && <>
                           <R label="Base Rate" value={`$${master.rate.toLocaleString()}/ton`}/>
                           {isPW && <R label="PW Adder" value={`+$${master.pwAdd.toLocaleString()}/ton`}/>}
@@ -1161,17 +1144,17 @@ export default function App() {
                         </>}
                       </div>
                       <button onClick={()=>setJobErectors(ers=>ers.filter(x=>x.id!==je.id))}
-                        style={{background:"none",border:"none",color:TXT3,cursor:"pointer",fontSize:18,padding:4,alignSelf:"flex-start"}}>×</button>
+                        style={{background:"none",border:"none",color:"#4b5563",cursor:"pointer",fontSize:18,padding:4,alignSelf:"flex-start"}}>×</button>
                     </div>
-                    {master?.notes && <div style={{marginTop:10,fontSize:10,color:TXT3}}>{master.notes}</div>}
+                    {master?.notes && <div style={{marginTop:10,fontSize:10,color:"#4b5563"}}>{master.notes}</div>}
                   </div>
                 );
               })}
             </div>
             <div style={{display:"flex",gap:12,alignItems:"center"}}>
               <Btn onClick={addJobErector}>+ Add Erector to Job</Btn>
-              <div style={{marginLeft:"auto",background:BG2,border:"1px solid #2d3340",borderRadius:6,padding:"8px 16px",fontSize:12}}>
-                Total Erection: <strong style={{color:ACC}}>{fmt(est.totalErection)}</strong>
+              <div style={{marginLeft:"auto",background:"#1a2030",border:"1px solid #2d3340",borderRadius:6,padding:"8px 16px",fontSize:12}}>
+                Total Erection: <strong style={{color:"#e85c26"}}>{fmt(est.totalErection)}</strong>
               </div>
             </div>
           </div>
@@ -1180,7 +1163,7 @@ export default function App() {
         {/* PAINT & GALV */}
         {tab === "finishes" && (
           <div>
-            <div style={{marginBottom:20}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:TXT,letterSpacing:"1px",marginBottom:4}}>Paint & Galvanizing</div><div style={{fontSize:12,color:TXT3}}>Paint = material cost only. Application labor is in shop hours. Galvanizing is a sendout.</div></div>
+            <SH title="Paint & Galvanizing" sub="Paint = material cost only. Application labor is in shop hours. Galvanizing is a sendout."/>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24}}>
               <div>
                 <SecLbl>Shop Paint</SecLbl>
@@ -1193,46 +1176,46 @@ export default function App() {
                   </select>
                 </div>
                 {paintType !== "none" && (
-                  <div style={{background:BG2,border:"1px solid #1e2532",borderRadius:8,padding:16,marginBottom:14}}>
+                  <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:8,padding:16,marginBottom:14}}>
                     <Lbl>Shop Paint Material</Lbl>
                     <div style={{display:"flex",gap:12,alignItems:"flex-end",marginTop:8}}>
-                      <div><div style={{fontSize:9,color:TXT3,marginBottom:4}}>Gallons</div><input type="number" value={pgal} onChange={e=>setPgal(+e.target.value)} style={ci(70)}/></div>
-                      <div><div style={{fontSize:9,color:TXT3,marginBottom:4}}>$/Gallon</div><input type="number" value={ppg} onChange={e=>setPpg(+e.target.value)} style={ci(70)}/></div>
-                      <div style={{fontSize:14,color:ACC,fontWeight:700,paddingBottom:4}}>= {fmt(est.paintMat)}</div>
+                      <div><div style={{fontSize:9,color:"#6b7280",marginBottom:4}}>Gallons</div><input type="number" value={pgal} onChange={e=>setPgal(+e.target.value)} style={ci(70)}/></div>
+                      <div><div style={{fontSize:9,color:"#6b7280",marginBottom:4}}>$/Gallon</div><input type="number" value={ppg} onChange={e=>setPpg(+e.target.value)} style={ci(70)}/></div>
+                      <div style={{fontSize:14,color:"#e85c26",fontWeight:700,paddingBottom:4}}>= {fmt(est.paintMat)}</div>
                     </div>
                   </div>
                 )}
-                <div style={{background:BG2,border:"1px solid #1e2532",borderRadius:8,padding:16}}>
+                <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:8,padding:16}}>
                   <Lbl>Field Touch-Up Paint</Lbl>
                   <div style={{display:"flex",gap:12,alignItems:"flex-end",marginTop:8}}>
-                    <div><div style={{fontSize:9,color:TXT3,marginBottom:4}}>Gallons</div><input type="number" value={tgal} onChange={e=>setTgal(+e.target.value)} style={ci(70)}/></div>
-                    <div><div style={{fontSize:9,color:TXT3,marginBottom:4}}>$/Gallon</div><input type="number" value={tpg} onChange={e=>setTpg(+e.target.value)} style={ci(70)}/></div>
-                    <div style={{fontSize:14,color:ACC,fontWeight:700,paddingBottom:4}}>= {fmt(est.touchCost)}</div>
+                    <div><div style={{fontSize:9,color:"#6b7280",marginBottom:4}}>Gallons</div><input type="number" value={tgal} onChange={e=>setTgal(+e.target.value)} style={ci(70)}/></div>
+                    <div><div style={{fontSize:9,color:"#6b7280",marginBottom:4}}>$/Gallon</div><input type="number" value={tpg} onChange={e=>setTpg(+e.target.value)} style={ci(70)}/></div>
+                    <div style={{fontSize:14,color:"#e85c26",fontWeight:700,paddingBottom:4}}>= {fmt(est.touchCost)}</div>
                   </div>
                   <Note tight>Always include field touch-up. Easy to forget, always eats margin.</Note>
                 </div>
               </div>
               <div>
                 <SecLbl>Galvanizing (Sendout)</SecLbl>
-                <div style={{background:BG2,border:"1px solid #1e2532",borderRadius:8,padding:16,marginBottom:14}}>
+                <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:8,padding:16,marginBottom:14}}>
                   <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
                     <Toggle value={isGalv} onChange={setIsGalv}/>
-                    <span style={{fontSize:12,color:isGalv?TXT:TXT3}}>This job requires galvanizing</span>
+                    <span style={{fontSize:12,color:isGalv?"#edf0f4":"#6b7280"}}>This job requires galvanizing</span>
                   </div>
                   {isGalv ? (
                     <div>
                       <Lbl>Galvanizer Quote (Lump Sum)</Lbl>
                       <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8,marginBottom:10}}>
-                        <span style={{color:TXT3}}>$</span>
+                        <span style={{color:"#6b7280"}}>$</span>
                         <input type="number" value={galvAmt} onChange={e=>setGalvAmt(+e.target.value)}
-                          style={{background:BG,border:"1px solid #2d3340",borderRadius:4,color:TXT,padding:"8px 10px",fontSize:16,fontWeight:700,width:140,fontFamily:"inherit"}}/>
+                          style={{background:"#0e1117",border:"1px solid #2d3340",borderRadius:4,color:"#edf0f4",padding:"8px 10px",fontSize:16,fontWeight:700,width:140,fontFamily:"inherit"}}/>
                       </div>
-                      <div style={{color:ACC,fontWeight:700}}>{fmt(galvAmt)}</div>
+                      <div style={{color:"#e85c26",fontWeight:700}}>{fmt(galvAmt)}</div>
                       <Note tight>Typical: $0.35–0.60/lb. Set paint to "No Paint" if galvanizing.</Note>
                     </div>
-                  ) : <div style={{fontSize:11,color:TXT3}}>Toggle on when galvanizing is required.</div>}
+                  ) : <div style={{fontSize:11,color:"#4b5563"}}>Toggle on when galvanizing is required.</div>}
                 </div>
-                <div style={{background:BG2,border:"1px solid #1e2532",borderRadius:8,padding:16}}>
+                <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:8,padding:16}}>
                   <R label="Shop Paint" value={fmt(est.paintMat)}/>
                   <R label="Touch-Up" value={fmt(est.touchCost)}/>
                   <R label="Galvanizing" value={isGalv ? fmt(est.galvCost) : "N/A"}/>
@@ -1246,8 +1229,8 @@ export default function App() {
         {/* OTHER COSTS */}
         {tab === "other" && (
           <div>
-            <div style={{marginBottom:20}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:TXT,letterSpacing:"1px",marginBottom:4}}>Other Direct Costs</div><div style={{fontSize:12,color:TXT3}}>Hardware, freight, detailing, inspection.</div></div>
-            <div style={{background:BG2,border:"1px solid #1e2532",borderRadius:8,padding:20,maxWidth:500}}>
+            <SH title="Other Direct Costs" sub="Hardware, freight, detailing, inspection."/>
+            <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:8,padding:20,maxWidth:500}}>
               {[
                 ["Bolts, Anchor Rods & Hardware", bolts, setBolts],
                 ["Freight / Delivery to Site", freightC, setFreightC],
@@ -1256,11 +1239,11 @@ export default function App() {
                 ["Miscellaneous", miscCost, setMiscCost],
               ].map(([label,val,setter]) => (
                 <div key={label} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #1a1f2b"}}>
-                  <span style={{fontSize:12,color:TXT2}}>{label}</span>
+                  <span style={{fontSize:12,color:"#9ca3af"}}>{label}</span>
                   <div style={{display:"flex",alignItems:"center",gap:4}}>
-                    <span style={{color:TXT3,fontSize:12}}>$</span>
+                    <span style={{color:"#6b7280",fontSize:12}}>$</span>
                     <input type="number" value={val} onChange={e=>setter(+e.target.value)}
-                      style={{background:BG,border:"1px solid #2d3340",borderRadius:4,color:TXT,padding:"5px 8px",fontSize:13,width:100,fontFamily:"inherit",textAlign:"right"}}/>
+                      style={{background:"#0e1117",border:"1px solid #2d3340",borderRadius:4,color:"#edf0f4",padding:"5px 8px",fontSize:13,width:100,fontFamily:"inherit",textAlign:"right"}}/>
                   </div>
                 </div>
               ))}
@@ -1275,30 +1258,30 @@ export default function App() {
         {/* PREVAILING WAGE */}
         {tab === "pw" && (
           <div>
-            <div style={{marginBottom:20}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:TXT,letterSpacing:"1px",marginBottom:4}}>Prevailing Wage</div><div style={{fontSize:12,color:TXT3}}>Field labor only — erectors and road crew. Your shop workers are NOT affected.</div></div>
-            <div style={{background:BG2,border:"1px solid #7c3aed44",borderRadius:8,padding:20,maxWidth:600,marginBottom:24}}>
+            <SH title="Prevailing Wage" sub="Field labor only — erectors and road crew. Your shop workers are NOT affected."/>
+            <div style={{background:"#13171f",border:"1px solid #7c3aed44",borderRadius:8,padding:20,maxWidth:600,marginBottom:24}}>
               <div style={{fontSize:10,color:"#a78bfa",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>How Prevailing Wage Works</div>
-              <div style={{fontSize:12,color:TXT2,lineHeight:1.9}}>
-                <strong style={{color:TXT}}>What it is:</strong> Davis-Bacon Act requires you pay field workers (ironworkers, erectors) at least the government-set "prevailing wage" for that trade in that county. It's a minimum floor, not a maximum.<br/><br/>
-                <strong style={{color:TXT}}>What it affects:</strong> Erector rates only. Your shop guys fabricate steel in your shop — they are not covered by prevailing wage requirements.<br/><br/>
-                <strong style={{color:TXT}}>The rate adder:</strong> The difference between what your erector normally charges and what the PW rate requires. Set it per erector in Price Lists.<br/><br/>
-                <strong style={{color:TXT}}>Certified payroll:</strong> On PW jobs you must file weekly certified payroll reports proving compliance. Budget time and admin cost for this.
+              <div style={{fontSize:12,color:"#9ca3af",lineHeight:1.9}}>
+                <strong style={{color:"#edf0f4"}}>What it is:</strong> Davis-Bacon Act requires you pay field workers (ironworkers, erectors) at least the government-set "prevailing wage" for that trade in that county. It's a minimum floor, not a maximum.<br/><br/>
+                <strong style={{color:"#edf0f4"}}>What it affects:</strong> Erector rates only. Your shop guys fabricate steel in your shop — they are not covered by prevailing wage requirements.<br/><br/>
+                <strong style={{color:"#edf0f4"}}>The rate adder:</strong> The difference between what your erector normally charges and what the PW rate requires. Set it per erector in Price Lists.<br/><br/>
+                <strong style={{color:"#edf0f4"}}>Certified payroll:</strong> On PW jobs you must file weekly certified payroll reports proving compliance. Budget time and admin cost for this.
               </div>
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:24,background:BG2,border:"1px solid #1e2532",borderRadius:8,padding:18,maxWidth:500}}>
+            <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:24,background:"#13171f",border:"1px solid #1e2532",borderRadius:8,padding:18,maxWidth:500}}>
               <Toggle value={isPW} onChange={setIsPW} large/>
               <div>
-                <div style={{fontSize:13,color:isPW?TXT:TXT3,fontWeight:600,marginBottom:3}}>{isPW?"This is a Prevailing Wage job":"Standard (non-prevailing wage)"}</div>
-                <div style={{fontSize:11,color:TXT3}}>Toggle on for public, government, school, or bond-funded projects</div>
+                <div style={{fontSize:13,color:isPW?"#edf0f4":"#6b7280",fontWeight:600,marginBottom:3}}>{isPW?"This is a Prevailing Wage job":"Standard (non-prevailing wage)"}</div>
+                <div style={{fontSize:11,color:"#6b7280"}}>Toggle on for public, government, school, or bond-funded projects</div>
               </div>
             </div>
             {isPW && (
-              <div style={{background:BG2,border:"1px solid #7c3aed44",borderRadius:8,padding:18,maxWidth:500}}>
+              <div style={{background:"#13171f",border:"1px solid #7c3aed44",borderRadius:8,padding:18,maxWidth:500}}>
                 <div style={{fontSize:10,color:"#a78bfa",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Certified Payroll Admin Cost</div>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:10}}>
-                  <span style={{color:TXT3}}>$</span>
+                  <span style={{color:"#6b7280"}}>$</span>
                   <input type="number" value={pwAdmin} onChange={e=>setPwAdmin(+e.target.value)}
-                    style={{background:BG,border:"1px solid #2d3340",borderRadius:4,color:TXT,padding:"6px 10px",fontSize:15,fontWeight:700,width:110,fontFamily:"inherit"}}/>
+                    style={{background:"#0e1117",border:"1px solid #2d3340",borderRadius:4,color:"#edf0f4",padding:"6px 10px",fontSize:15,fontWeight:700,width:110,fontFamily:"inherit"}}/>
                 </div>
                 <Note tight>Budget $1,000–3,000 depending on job duration and crew size. Look up county/trade rates at dol.gov/agencies/whd/wage-rates — set PW adder per erector in Price Lists tab.</Note>
               </div>
@@ -1318,23 +1301,23 @@ export default function App() {
         {/* QUOTE */}
         {tab === "quote" && (
           <div>
-            <div style={{marginBottom:20}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,fontWeight:800,color:TXT,letterSpacing:"1px",marginBottom:4}}>Quote Summary</div><div style={{fontSize:12,color:TXT3}}>Full rollup. Click Print / Download to generate a client-ready quote.</div></div>
+            <SH title="Quote Summary" sub="Full rollup. Click Print / Download to generate a client-ready quote."/>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,marginBottom:20,maxWidth:700}}>
               <div>
                 <Lbl>Company Name (for printed quote)</Lbl>
                 <input value={companyName} onChange={e=>setCompanyName(e.target.value)} style={{...ci(300),marginTop:6,display:"block",padding:"7px 10px"}}/>
               </div>
             </div>
-            <div style={{background:BG2,border:"1px solid #1e2532",borderRadius:10,padding:28,maxWidth:600}}>
+            <div style={{background:"#13171f",border:"1px solid #1e2532",borderRadius:10,padding:28,maxWidth:600}}>
               <div style={{borderBottom:"1px solid #1e2532",paddingBottom:14,marginBottom:16}}>
                 <div style={{display:"flex",alignItems:"baseline",gap:12,marginBottom:6}}>
-                  <span style={{fontSize:13,color:ACC,fontWeight:700}}>{jobNum}</span>
-                  <span style={{fontSize:15,color:TXT,fontWeight:700}}>{jobName}</span>
+                  <span style={{fontSize:13,color:"#e85c26",fontWeight:700}}>{jobNum}</span>
+                  <span style={{fontSize:15,color:"#edf0f4",fontWeight:700}}>{jobName}</span>
                 </div>
-                <div style={{fontSize:11,color:TXT3,marginBottom:6}}>{supplier} | {fmtN(est.totalTons,2)} total tons</div>
+                <div style={{fontSize:11,color:"#6b7280",marginBottom:6}}>{supplier} | {fmtN(est.totalTons,2)} total tons</div>
                 <div style={{display:"flex",gap:14,flexWrap:"wrap"}}>
                   {WORK_TYPES.map(({id,label,color}) => (
-                    <span key={id} style={{fontSize:10}}><span style={{color}}>{label}: </span><span style={{color:TXT2}}>{fmtN(est.tonsByType[id],2)}T</span></span>
+                    <span key={id} style={{fontSize:10}}><span style={{color}}>{label}: </span><span style={{color:"#9ca3af"}}>{fmtN(est.tonsByType[id],2)}T</span></span>
                   ))}
                   {isPW && <span style={{fontSize:10,color:"#a78bfa"}}>| Prevailing Wage</span>}
                   {requiresAISC && <span style={{fontSize:10,color:"#f59e0b"}}>| AISC Required</span>}
@@ -1387,10 +1370,10 @@ export default function App() {
                 <R label={`Margin (${marg}%)`} value={fmt(est.margCost)}/>
               </div>
               <div style={{borderTop:"2px solid #e85c26",marginTop:16,paddingTop:16,display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
-                <span style={{fontSize:14,color:TXT,fontWeight:700}}>TOTAL QUOTE</span>
-                <span style={{fontSize:26,color:ACC,fontWeight:800}}>{fmt(est.total)}</span>
+                <span style={{fontSize:14,color:"#edf0f4",fontWeight:700}}>TOTAL QUOTE</span>
+                <span style={{fontSize:26,color:"#e85c26",fontWeight:800}}>{fmt(est.total)}</span>
               </div>
-              <div style={{marginTop:5,textAlign:"right",fontSize:11,color:TXT3}}>
+              <div style={{marginTop:5,textAlign:"right",fontSize:11,color:"#6b7280"}}>
                 {est.totalTons>0 ? fmtD(est.total/est.totalTons)+"/ton" : ""}
               </div>
             </div>
@@ -1403,13 +1386,13 @@ export default function App() {
             </div>
 
             <div style={{marginTop:20,display:"flex",gap:12,alignItems:"center"}}>
-              <button onClick={doPrint} style={{background:ACC,border:"none",borderRadius:8,color:"white",padding:"12px 24px",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>
+              <button onClick={doPrint} style={{background:"#e85c26",border:"none",borderRadius:8,color:"white",padding:"12px 24px",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>
                 ⎙ Print Quote
               </button>
-              <button onClick={doPrint} style={{background:BG2,border:"1px solid #2d3340",borderRadius:8,color:TXT2,padding:"12px 24px",fontSize:12,cursor:"pointer",fontFamily:"inherit",letterSpacing:1,textTransform:"uppercase"}}>
+              <button onClick={doPrint} style={{background:"#1a2030",border:"1px solid #2d3340",borderRadius:8,color:"#c8cdd6",padding:"12px 24px",fontSize:12,cursor:"pointer",fontFamily:"inherit",letterSpacing:1,textTransform:"uppercase"}}>
                 ↓ Download PDF
               </button>
-              <span style={{fontSize:10,color:TXT3,alignSelf:"center"}}>PDF: in print dialog, choose "Save as PDF" as destination</span>
+              <span style={{fontSize:10,color:"#4b5563",alignSelf:"center"}}>PDF: in print dialog, choose "Save as PDF" as destination</span>
             </div>
           </div>
         )}
