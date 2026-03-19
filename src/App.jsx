@@ -582,32 +582,60 @@ function renderPrintView(est, jobNum, jobName, supplier, isPW, requiresAISC, tax
     </div>
     <div class="pv-section">
       <div class="pv-section-title">Structural Steel</div>
-      ${(structRows||[]).filter(r=>r.rawLbs>0||(parseFloat(r.weightPerFt)&&parseFloat(r.qty)&&parseFloat(r.length))).map(r=>{
-        const lbs = r.rawLbs>0 ? r.rawLbs : parseFloat(r.weightPerFt)*parseFloat(r.qty)*parseFloat(r.length);
-        const cf = parseFloat(r.costFactor)||0;
-        return `<div class="pv-mat-row">
-          <span class="pv-mat-shape">${r.shape}</span>
-          <span class="pv-mat-note">${r.note||''}</span>
-          <span class="pv-mat-lbs">${Math.round(lbs).toLocaleString()} lb</span>
-          <span class="pv-mat-tons">${(lbs/2000).toFixed(3)} T</span>
-          ${cf>0?`<span class="pv-mat-cost">${fmt(cf*lbs)}</span>`:'<span class="pv-mat-cost">—</span>'}
-        </div>`;
-      }).join('')}
+      <table class="pv-mat-table">
+        <thead><tr>
+          <th>Section</th><th>Description</th>
+          <th class="right">Lbs</th><th class="right">Tons</th><th class="right">Material $</th>
+        </tr></thead>
+        <tbody>
+        ${(structRows||[]).filter(r=>r.rawLbs>0||(parseFloat(r.weightPerFt)&&parseFloat(r.qty)&&parseFloat(r.length))).map(r=>{
+          const lbs = r.rawLbs>0 ? r.rawLbs : parseFloat(r.weightPerFt)*parseFloat(r.qty)*parseFloat(r.length);
+          const cf = parseFloat(r.costFactor)||0;
+          return `<tr>
+            <td class="pv-mat-shape">${r.shape}</td>
+            <td class="pv-mat-note">${r.note||''}</td>
+            <td class="right">${Math.round(lbs).toLocaleString()}</td>
+            <td class="right pv-mat-tons">${(lbs/2000).toFixed(3)}</td>
+            <td class="right">${cf>0?fmt(cf*lbs):'—'}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+        <tfoot><tr>
+          <td colspan="2"><strong>Total Structural</strong></td>
+          <td class="right"><strong>${Math.round((structRows||[]).reduce((a,r)=>{const l=r.rawLbs>0?r.rawLbs:parseFloat(r.weightPerFt)*parseFloat(r.qty)*parseFloat(r.length)||0;return a+l;},0)).toLocaleString()}</strong></td>
+          <td class="right pv-mat-tons"><strong>${((structRows||[]).reduce((a,r)=>{const l=r.rawLbs>0?r.rawLbs:parseFloat(r.weightPerFt)*parseFloat(r.qty)*parseFloat(r.length)||0;return a+l;},0)/2000).toFixed(2)} T</strong></td>
+          <td class="right"><strong>${fmt((structRows||[]).reduce((a,r)=>{const l=r.rawLbs>0?r.rawLbs:parseFloat(r.weightPerFt)*parseFloat(r.qty)*parseFloat(r.length)||0;const cf=parseFloat(r.costFactor)||0;return a+cf*l;},0))}</strong></td>
+        </tr></tfoot>
+      </table>
     </div>
     ${(miscRows||[]).some(r=>r.rawLbs>0||(parseFloat(r.weightPerFt)&&parseFloat(r.qty))) ? `
     <div class="pv-section">
       <div class="pv-section-title">Misc Metals</div>
-      ${(miscRows||[]).filter(r=>r.rawLbs>0||(parseFloat(r.weightPerFt)&&parseFloat(r.qty))).map(r=>{
-        const lbs = r.rawLbs>0 ? r.rawLbs : parseFloat(r.weightPerFt)*(parseFloat(r.qty)||1)*(parseFloat(r.length)||1);
-        const cf = parseFloat(r.costFactor)||0;
-        return `<div class="pv-mat-row">
-          <span class="pv-mat-shape">${r.shape}</span>
-          <span class="pv-mat-note">${r.note||r.itemType||''}</span>
-          <span class="pv-mat-lbs">${Math.round(lbs).toLocaleString()} lb</span>
-          <span class="pv-mat-tons">${(lbs/2000).toFixed(3)} T</span>
-          ${cf>0?`<span class="pv-mat-cost">${fmt(cf*lbs)}</span>`:'<span class="pv-mat-cost">—</span>'}
-        </div>`;
-      }).join('')}
+      <table class="pv-mat-table">
+        <thead><tr>
+          <th>Section</th><th>Type</th>
+          <th class="right">Lbs</th><th class="right">Tons</th><th class="right">Material $</th>
+        </tr></thead>
+        <tbody>
+        ${(miscRows||[]).filter(r=>r.rawLbs>0||(parseFloat(r.weightPerFt)&&parseFloat(r.qty))).map(r=>{
+          const lbs = r.rawLbs>0 ? r.rawLbs : parseFloat(r.weightPerFt)*(parseFloat(r.qty)||1)*(parseFloat(r.length)||1);
+          const cf = parseFloat(r.costFactor)||0;
+          return `<tr>
+            <td class="pv-mat-shape">${r.shape}</td>
+            <td class="pv-mat-note">${r.note||r.itemType||''}</td>
+            <td class="right">${Math.round(lbs).toLocaleString()}</td>
+            <td class="right pv-mat-tons">${(lbs/2000).toFixed(3)}</td>
+            <td class="right">${cf>0?fmt(cf*lbs):'—'}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+        <tfoot><tr>
+          <td colspan="2"><strong>Total Misc Metals</strong></td>
+          <td class="right"><strong>${Math.round((miscRows||[]).reduce((a,r)=>{const l=r.rawLbs>0?r.rawLbs:parseFloat(r.weightPerFt)*(parseFloat(r.qty)||1)*(parseFloat(r.length)||1)||0;return a+l;},0)).toLocaleString()}</strong></td>
+          <td class="right pv-mat-tons"><strong>${((miscRows||[]).reduce((a,r)=>{const l=r.rawLbs>0?r.rawLbs:parseFloat(r.weightPerFt)*(parseFloat(r.qty)||1)*(parseFloat(r.length)||1)||0;return a+l;},0)/2000).toFixed(2)} T</strong></td>
+          <td class="right"><strong>${fmt((miscRows||[]).reduce((a,r)=>{const l=r.rawLbs>0?r.rawLbs:parseFloat(r.weightPerFt)*(parseFloat(r.qty)||1)*(parseFloat(r.length)||1)||0;const cf=parseFloat(r.costFactor)||0;return a+cf*l;},0))}</strong></td>
+        </tr></tfoot>
+      </table>
     </div>` : ''}
     <div class="pv-section">
       <div class="pv-section-title">Cost Summary</div>
