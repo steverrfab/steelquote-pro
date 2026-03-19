@@ -1248,8 +1248,17 @@ export default function App() {
         <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
           {isPW && <Badge color="#7c3aed" text="PREVAILING WAGE"/>}
           {requiresAISC && <Badge color="#f59e0b" text="AISC REQUIRED"/>}
+          <button onClick={()=>setShowQuoteManager(m=>!m)} style={{background:"transparent",border:"1px solid #333333",borderRadius:4,color:"#888888",padding:"8px 14px",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,letterSpacing:"1.5px",textTransform:"uppercase"}}>
+            ☰ Quotes
+          </button>
+          <button onClick={saveQuote} style={{background:"transparent",border:"1px solid #444444",borderRadius:4,color:"#888888",padding:"8px 14px",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,letterSpacing:"1.5px",textTransform:"uppercase"}}>
+            ↓ Save
+          </button>
+          <button onClick={()=>resetQuote(true)} style={{background:"transparent",border:"1px solid #c0392b",borderRadius:4,color:"#c0392b",padding:"8px 14px",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,letterSpacing:"1.5px",textTransform:"uppercase"}}>
+            ↺ Reset
+          </button>
           <button onClick={doPrint} style={{background:"transparent",border:"1px solid #e85c26",borderRadius:4,color:"#e85c26",padding:"8px 18px",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:700,letterSpacing:"1.5px",textTransform:"uppercase"}}>
-            ⎙ Print / Download
+            ⎙ Print
           </button>
           <div style={{textAlign:"right"}}>
             <div style={{fontSize:9,color:"#444444",letterSpacing:"2px",textTransform:"uppercase",marginBottom:4,fontWeight:700}}>Job #</div>
