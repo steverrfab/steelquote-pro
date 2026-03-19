@@ -1643,7 +1643,7 @@ export default function App() {
                         return (
                           <div style={{background:"#161616",border:"1px solid #222222",borderRadius:4,padding:"10px 14px",fontSize:12}}>
                             <div style={{color:"#444444",marginBottom:4}}>{est.totalTons.toFixed(2)} T × {tpg} sqft/T = {Math.round(sqft).toLocaleString()} sqft</div>
-                            <div style={{color:"#444444",marginBottom:4"}}>{Math.round(sqft).toLocaleString()} sqft ÷ {tgal} sqft/gal = <span style={{color:"#ffffff"}}>{gallons.toFixed(1)} gal</span></div>
+                            <div style={{color:"#444444",marginBottom:4}}>{Math.round(sqft).toLocaleString()} sqft ÷ {tgal} sqft/gal = <span style={{color:"#ffffff"}}>{gallons.toFixed(1)} gal</span></div>
                             <div style={{color:"#444444",marginBottom:8}}>{gallons.toFixed(1)} gal ÷ {pgal} gal/drum = <span style={{color:"#ffffff"}}>{drums.toFixed(2)} drums</span></div>
                             <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,color:"#e85c26",fontWeight:700}}>{fmt(cost)}</div>
                           </div>
