@@ -10,10 +10,85 @@ import { AISC_DB } from './aisc_data.js';
 import { SH, SecLbl, QSec, R, Lbl, Note, Badge, Chip, Toggle, Btn } from './components.jsx';
 
 // ── FILE UPLOAD ────────────────────────────────────────────────────────────────
+// ── FRACTION HELPERS ─────────────────────────────────────────────────────────
+function parseFraction(s) {
+  // "13'-5 3/4"" -> feet as decimal, "42'" -> 42, "10'-0"" -> 10
+  // Also handles plain numbers like "22.5"
+  if (!s) return null;
+  const str = String(s).trim();
+  // Try feet-inches format: 13'-5 3/4" or 13'-5 3/4"
+  const fiMatch = str.match(/(\d+)['′]\s*-?\s*(\d+(?:\s+\d+\/\d+)?(?:-\d+\/\d+)?)["″]/);
+  if (fiMatch) {
+    const feet = parseInt(fiMatch[1]);
+    const inchPart = fiMatch[2].trim();
+    // Parse inches which may include mixed fractions like "5 3/4" or "8-1/4"
+    const inchClean = inchPart.replace(/-/g,' ');
+    const parts = inchClean.split(/\s+/);
+    let inches = 0;
+    for (const p of parts) {
+      if (p.includes('/')) { const [n,d] = p.split('/'); inches += parseInt(n)/parseInt(d); }
+      else if (p) inches += parseFloat(p)||0;
+    }
+    return +(feet + inches/12).toFixed(3);
+  }
+  // Simple feet: "42'"
+  const ftOnly = str.match(/^(\d+(?:\.\d+)?)['′]$/);
+  if (ftOnly) return parseFloat(ftOnly[1]);
+  // Plain number
+  const num = parseFloat(str);
+  return isNaN(num) ? null : num;
+}
+
+function parseMarkQty(markStr) {
+  // "303C1 - 314C1" -> count prefix numbers: 314-303+1 = 12
+  // "E13 - E19" -> not a useful count (elevation range), return null
+  if (!markStr) return null;
+  const m = String(markStr).match(/^[A-Z]*(\d+)[A-Z]\d*\s*-\s*[A-Z]*(\d+)/i);
+  if (m) {
+    const a = parseInt(m[1]), b = parseInt(m[2]);
+    if (b >= a && b - a < 200) return b - a + 1;
+  }
+  return null;
+}
+
+function parseSectionName(raw) {
+  // "HSS8 x 4 x 3/8 Metal Beam" -> "HSS8X4X3/8"
+  // "W18 x 106 Metal Beam" -> "W18X106"
+  // "PL1/2 x 8 x 12 Metal Plate" -> "PL1/2X8X12"
+  let s = String(raw).trim();
+  // Remove trailing descriptors
+  s = s.replace(/\s+(Metal\s+\w+.*|Column\s*@.*|Beam.*|Post.*|Brace.*|Girder.*|Stub.*|Angle.*|Plate.*|Shear.*|Bent.*|Base.*|Cap.*)/i, '').trim();
+  // Normalize "x" separators
+  s = s.replace(/\s+x\s+/gi, 'X').replace(/\s+/g, '');
+  return s.toUpperCase();
+}
+
+function parsePlateDims(raw) {
+  // "PL1/2 x 8 x 12" -> {thickness:"1/2", widthFt:(8/12), lengthFt:(12/12)}
+  // "PL1/4 x 8 x 16" -> thickness 1/4, 8in wide, 16in long
+  const s = String(raw).replace(/^PL/i,'').trim();
+  const parts = s.split(/\s+x\s+/i);
+  if (parts.length >= 1) {
+    const thk = parts[0].trim().replace(/"/g,'');
+    const wIn = parts[1] ? parseFloat(parts[1]) : null;
+    const lIn = parts[2] ? parseFloat(parts[2]) : null;
+    // Convert inches to feet
+    return {
+      thickness: thk,
+      widthFt: wIn ? String(+(wIn/12).toFixed(4)) : "",
+      lengthFt: lIn ? String(+(lIn/12).toFixed(4)) : "",
+    };
+  }
+  return {thickness:"1/4", widthFt:"", lengthFt:""};
+}
+
 function parseWorkType(t) {
   const lt = String(t||"").toLowerCase();
-  if (lt.includes("misc")||lt.includes("rail")||lt.includes("stair")||lt.includes("ladder")) return "misc";
+  if (lt.includes("angle")||lt.includes("plate")||lt.includes("misc")||lt.includes("rail")||lt.includes("stair")||lt.includes("ladder")) return "misc";
   if (lt.includes("stainless")||lt.includes("ss-")||lt.includes("304")||lt.includes("316")) return "stainless";
+  if (/^pl/i.test(lt)) return "misc";
+  if (/^l\d/i.test(lt)) return "misc";
+  if (/^c\d/i.test(lt)) return "misc";
   return "structural";
 }
 
@@ -25,35 +100,101 @@ function parseUploadedFile(file, callback) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
       if (raw.length < 2) { callback([], [], "No data found in file."); return; }
-      const headers = raw[0].map(h => String(h||"").toLowerCase().trim());
-      const find = (names) => headers.findIndex(h => names.some(n => h.includes(n)));
-      const colSec  = find(["section","size","designation","shape","member size"]);
-      const colDesc = find(["desc","note","member type","type"]);
-      const colQty  = find(["qty","quantity","count","no.","no ","pcs","pieces","number"]);
-      const colWplf = find(["wt/ft","weight","lbs/ft","lb/ft","plf","wplf","unit wt","lbs per"]);
-      const colLen  = find(["length","len","feet"," ft","'","l (ft)"]);
-      const colType = find(["work type","category","scope","mat type"]);
+
+      // ── DETECT FORMAT ────────────────────────────────────────────────────
+      // Check if this looks like a standard CSV (has header row with known columns)
+      // vs the custom estimate format (section names in col E, marks in col C)
+      const firstRow = raw[0].map(h => String(h||"").toLowerCase().trim());
+      const hasStdHeaders = firstRow.some(h => ["section","qty","quantity","length","shape"].includes(h));
 
       const structOut = [], miscOut = [];
-      raw.slice(1)
-        .filter(r => r.some(c => c !== "" && c !== null))
-        .forEach((r, i) => {
-          const section = colSec >= 0 ? String(r[colSec]||"").toUpperCase().replace(/\s+/g,"") : "";
-          const wplf    = colWplf >= 0 ? parseFloat(r[colWplf])||0 : 0;
-          const len     = colLen  >= 0 ? parseFloat(r[colLen])||0  : 0;
-          const qty     = colQty  >= 0 ? Math.max(1, parseFloat(r[colQty])||1) : 1;
-          const type    = colType >= 0 ? parseWorkType(r[colType]) : "structural";
+      let idBase = Date.now();
+
+      if (hasStdHeaders) {
+        // ── STANDARD CSV FORMAT ───────────────────────────────────────────
+        const find = (names) => firstRow.findIndex(h => names.some(n => h.includes(n)));
+        const colSec  = find(["section","size","designation","shape","member size"]);
+        const colQty  = find(["qty","quantity","count","pcs","pieces","number"]);
+        const colWplf = find(["wt/ft","weight","lbs/ft","lb/ft","wplf","unit wt"]);
+        const colLen  = find(["length","len","feet"," ft","l (ft)"]);
+        const colType = find(["work type","category","scope","type"]);
+
+        raw.slice(1).filter(r => r.some(c => c !== "" && c !== null)).forEach((r, i) => {
+          const rawSec = String(r[colSec]||"");
+          const section = rawSec.toUpperCase().replace(/\s+/g,"");
           if (!section) return;
-          // Build lengths array: one entry per qty
-          const lengths = len > 0 ? Array(qty).fill(len) : [];
-          const base = { id: Date.now()+i+Math.random(), shape:section, weightPerFt:String(wplf), lengths, costFactor:"", _scope:type };
+          const wplf = colWplf >= 0 ? parseFloat(r[colWplf])||0 : 0;
+          const len  = colLen  >= 0 ? parseFraction(r[colLen]) || 0 : 0;
+          const qty  = colQty  >= 0 ? Math.max(1, parseFloat(r[colQty])||1) : 1;
+          const rawType = colType >= 0 ? String(r[colType]) : rawSec;
+          const type = parseWorkType(rawType || rawSec);
+          const base = {id:idBase+i+Math.random(), shape:section, weightPerFt:String(wplf), qty:String(qty), length:String(len||""), costFactor:"", note:"", _scope:type};
+          if (type==="structural") structOut.push(base);
+          else {
+            const isPlate = /^PL/i.test(section);
+            const pd = isPlate ? parsePlateDims(rawSec) : {thickness:"1/4",widthFt:"",lengthFt:""};
+            miscOut.push({...base, itemType:isPlate?"Plate":(/^L\d/i.test(section)?"L (Angle)":/^C\d/i.test(section)?"C / MC":"Other"),
+              isPlate, thickness:pd.thickness, widthFt:pd.widthFt, lengthFt:pd.lengthFt});
+          }
+        });
+
+      } else {
+        // ── CUSTOM ESTIMATE FORMAT ────────────────────────────────────────
+        // Section name in col 4 (E), mark range in col 2 (C)
+        // Section may contain embedded length: "HSS3 x 3 x 3/8 Metal Column @ 13'-5 3/4""
+        raw.filter(r => r.some(c => c !== "" && c !== null)).forEach((r, i) => {
+          // Find the cell that looks like a section name
+          let rawSec = "", markStr = "", embeddedLen = null;
+          for (let j = 0; j < Math.min(r.length, 10); j++) {
+            const v = String(r[j]||"").trim();
+            if (/^(W|HSS|L|C|S|WT|HP|MC|PL|PIPE)\d/i.test(v)) { rawSec = v; break; }
+          }
+          if (!rawSec) return;
+          // Mark range is usually 2 cols before section col
+          for (let j = 0; j < 5; j++) {
+            const v = String(r[j]||"").trim();
+            if (v && v !== rawSec) markStr = v;
+          }
+
+          // Extract embedded length from "@ 13'-5 3/4""
+          const atMatch = rawSec.match(/@\s*(.+)$/);
+          if (atMatch) embeddedLen = parseFraction(atMatch[1]);
+
+          const section = parseSectionName(rawSec);
+          if (!section || section.length < 2) return;
+
+          // Qty from mark range
+          const qty = parseMarkQty(markStr) || 1;
+          const len = embeddedLen || 0;
+
+          const isPlate = /^PL/i.test(rawSec);
+          const isAngle = /^L\d/i.test(rawSec);
+          const isChannel = /^(C|MC)\d/i.test(rawSec);
+          const type = isPlate || isAngle || isChannel ? "misc" : "structural";
+
+          // Description: cleaned section type
+          const descMatch = rawSec.match(/(Metal\s+\w+)/i);
+          const note = descMatch ? descMatch[1] : "";
+
+          const base = {id:idBase+i+Math.random(), shape:section, weightPerFt:"", qty:String(qty), length:len?String(len):"", costFactor:"", note, _scope:type};
+
           if (type === "structural") {
             structOut.push(base);
           } else {
-            miscOut.push({...base, itemType:"Other", isPlate:false, thickness:"1/4", widthFt:"", lengthFt:"", qty:""});
+            const pd = isPlate ? parsePlateDims(rawSec) : {thickness:"1/4",widthFt:"",lengthFt:""};
+            const itemType = isPlate?"Plate":isAngle?"L (Angle)":isChannel?"C / MC":"Other";
+            miscOut.push({...base, itemType, isPlate, thickness:pd.thickness, widthFt:pd.widthFt, lengthFt:pd.lengthFt});
           }
         });
-      callback(structOut, miscOut, null);
+      }
+
+      // Deduplicate by section name — keep first occurrence
+      const dedup = (arr) => {
+        const seen = new Set();
+        return arr.filter(r => { const k = r.shape+r.qty+r.length; if(seen.has(k)) return false; seen.add(k); return true; });
+      };
+
+      callback(dedup(structOut), dedup(miscOut), null);
     } catch(err) {
       callback([], [], "Error parsing file: " + err.message);
     }
